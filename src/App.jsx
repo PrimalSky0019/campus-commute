@@ -2,32 +2,46 @@ import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
 import Login from './features/auth/Login'
 import Dashboard from './features/home/Dashboard'
+import LandingPage from './features/home/LandingPage' // Import the new page
 
 function App() {
     const [session, setSession] = useState(null)
+    const [showLogin, setShowLogin] = useState(false) // State to toggle Landing vs Login
 
     useEffect(() => {
-        // 1. Check active session when app loads
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session)
         })
 
-        // 2. Listen for changes (login, logout)
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session)
         })
 
         return () => subscription.unsubscribe()
     }, [])
 
-    // If logged in, show Dashboard. Otherwise, show Login.
-    return (
-        <div>
-            {session ? <Dashboard session={session} /> : <Login />}
-        </div>
-    )
+    // 1. If user is logged in -> Show Dashboard
+    if (session) {
+        return <Dashboard session={session} />
+    }
+
+    // 2. If user wants to login -> Show Login Page
+    if (showLogin) {
+        return (
+            <>
+                {/* Optional: A back button to go to landing page */}
+                <div className="absolute top-4 left-4 z-10">
+                    <button onClick={() => setShowLogin(false)} className="text-gray-500 text-sm hover:underline">
+                        ← Back to Home
+                    </button>
+                </div>
+                <Login />
+            </>
+        )
+    }
+
+    // 3. Default -> Show Landing Page
+    return <LandingPage onGetStarted={() => setShowLogin(true)} />
 }
 
 export default App
