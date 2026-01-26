@@ -205,15 +205,3 @@ export default function Login() {
         </motion.div>
     )
 }
-                        <button
-                            onClick={() => setIsSignUp(!isSignUp)}
-                            className="ml-2 text-blue-600 font-bold hover:underline"
-                        >
-                            {isSignUp ? 'Log In' : 'Sign Up'}
-                        </button>
-                    </p>
-                </div>
-            </div>
-        </div>
-    )
-}

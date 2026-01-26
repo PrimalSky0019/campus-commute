@@ -309,7 +309,7 @@ export default function LandingPage({ onGetStarted }) {
                 viewport={{ once: true }}
                 className="w-full bg-[#1a1a1a] text-white py-12 px-6 text-center"
             >
-                <p className="font-medium text-gray-400">© 2024 Campus Commute. Making student life better. 🚀</p>
+                <p className="font-medium text-gray-400">© 2026 Campus Commute. Making student life better. 🚀</p>
             </motion.footer>
         </div>
     )

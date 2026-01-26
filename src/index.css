@@ -37,7 +37,7 @@ body {
 
 /* Smooth transitions */
 button, a {
-  @apply transition-all duration-300 ease-out;
+  @apply transition-all duration-300;
 }
 
 /* Fade in animation */
