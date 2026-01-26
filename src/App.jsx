@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
 import Login from './features/auth/Login'
-import Dashboard from './features/home/Dashboard'
-import LandingPage from './features/home/LandingPage' // Import the new page
+import Dashboard from './features/home/Dashboard' // <--- No curly braces!
+import LandingPage from './features/home/LandingPage'
 
 function App() {
     const [session, setSession] = useState(null)
-    const [showLogin, setShowLogin] = useState(false) // State to toggle Landing vs Login
+    const [showLogin, setShowLogin] = useState(false)
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -29,7 +29,6 @@ function App() {
     if (showLogin) {
         return (
             <>
-                {/* Optional: A back button to go to landing page */}
                 <div className="absolute top-4 left-4 z-10">
                     <button onClick={() => setShowLogin(false)} className="text-gray-500 text-sm hover:underline">
                         ← Back to Home
