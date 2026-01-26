@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, Clock, Car, Bus, Footprints, ArrowRight, Users, Check } from 'lucide-react'
+import { Clock, Car, Bus, Footprints, ArrowRight, Users, Check, Flame } from 'lucide-react'
+import { findMatchingOrders } from '../../utils/smartMatcher' // Import the Smart Matcher
 
 export default function TravelFeed({ session }) {
     const [plans, setPlans] = useState([])
+    const [orders, setOrders] = useState([]) // Store orders to check for matches
     const [loading, setLoading] = useState(false)
 
     // Form State
@@ -13,24 +15,35 @@ export default function TravelFeed({ session }) {
     const [time, setTime] = useState('')
     const [mode, setMode] = useState('Cab')
 
-    const fetchPlans = async () => {
-        const { data } = await supabase
+    const fetchData = async () => {
+        // 1. Fetch Travel Plans
+        const { data: travelData } = await supabase
             .from('travel_plans')
             .select('*')
             .order('created_at', { ascending: false })
-        if (data) setPlans(data)
+        if (travelData) setPlans(travelData)
+
+        // 2. Fetch Open Orders (for Smart Matching)
+        const { data: orderData } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('status', 'Open')
+        if (orderData) setOrders(orderData)
     }
 
     useEffect(() => {
-        fetchPlans()
+        fetchData()
 
-        // Realtime Subscription (Auto-update when someone joins)
-        const subscription = supabase
-            .channel('public:travel_plans')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'travel_plans' }, fetchPlans)
+        // Realtime Subscriptions for both tables
+        const travelSub = supabase.channel('travel_realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'travel_plans' }, fetchData)
             .subscribe()
 
-        return () => subscription.unsubscribe()
+        const orderSub = supabase.channel('order_realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchData)
+            .subscribe()
+
+        return () => { travelSub.unsubscribe(); orderSub.unsubscribe() }
     }, [])
 
     const handleSubmit = async (e) => {
@@ -43,17 +56,15 @@ export default function TravelFeed({ session }) {
                 destination,
                 travel_time: time,
                 mode,
-                passengers: [], // Start empty
-                seats_available: mode === 'Cab' ? 3 : 2 // Default seats
+                passengers: [],
+                seats_available: mode === 'Cab' ? 3 : 2
             }
         ])
-        if (!error) {
-            setOrigin(''); setDestination('');
-        }
+        if (!error) { setOrigin(''); setDestination(''); }
         setLoading(false)
     }
 
-    // --- NEW: JOIN RIDE FUNCTION ---
+    // JOIN RIDE LOGIC
     const handleJoin = async (planId, currentPassengers, seats) => {
         if (seats <= 0) return alert("Ride is full!")
 
@@ -77,7 +88,7 @@ export default function TravelFeed({ session }) {
     return (
         <div className="max-w-xl mx-auto p-4 space-y-8 pb-24">
 
-            {/* --- FORM (Same as before) --- */}
+            {/* --- FORM CARD --- */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
                 className="bg-white p-6 rounded-[2rem] shadow-xl shadow-blue-500/5 border border-blue-50 relative overflow-hidden"
@@ -103,7 +114,7 @@ export default function TravelFeed({ session }) {
                 </form>
             </motion.div>
 
-            {/* --- FEED WITH INTERACTION --- */}
+            {/* --- FEED --- */}
             <div className="space-y-4">
                 <h3 className="text-lg font-bold text-gray-700 px-2">Active Rides</h3>
 
@@ -113,6 +124,9 @@ export default function TravelFeed({ session }) {
                         const hasJoined = plan.passengers?.includes(session.user.email)
                         const isMyRide = plan.user_email === session.user.email
 
+                        // 🔥 SMART MATCHING: Find orders that match this trip's destination
+                        const matches = findMatchingOrders(plan, orders)
+
                         return (
                             <motion.div
                                 key={plan.id}
@@ -121,6 +135,20 @@ export default function TravelFeed({ session }) {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 relative group"
                             >
+                                {/* --- SMART BADGE (Visible if matches exist) --- */}
+                                {matches.length > 0 && (
+                                    <div className="mb-4 bg-orange-50 border border-orange-100 p-3 rounded-xl flex items-center gap-3 animate-pulse">
+                                        <div className="bg-orange-100 p-2 rounded-full text-orange-600">
+                                            <Flame size={18} fill="currentColor" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-800">
+                                                {matches.length} people need items from {plan.destination}!
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
@@ -134,14 +162,13 @@ export default function TravelFeed({ session }) {
                                         </div>
                                     </div>
 
-                                    {/* Avatar Stack */}
                                     <div className="flex flex-col items-end">
                                         <div className="flex -space-x-2">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-600" title={plan.user_email}>
+                                            <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-600">
                                                 {plan.user_email[0].toUpperCase()}
                                             </div>
                                             {plan.passengers?.map((p, i) => (
-                                                <div key={i} className="w-8 h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-xs font-bold text-green-600" title={p}>
+                                                <div key={i} className="w-8 h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-xs font-bold text-green-600">
                                                     {p[0].toUpperCase()}
                                                 </div>
                                             ))}
@@ -152,7 +179,6 @@ export default function TravelFeed({ session }) {
                                     </div>
                                 </div>
 
-                                {/* --- ACTION BUTTONS --- */}
                                 <div className="pt-4 border-t border-gray-50 flex justify-between items-center">
                   <span className="text-xs font-medium text-gray-400">
                     Posted by {plan.user_email.split('@')[0]}

@@ -4,11 +4,106 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  @apply scroll-smooth;
+}
+
 body {
   margin: 0;
-  /* This is the signature "Hope Rise" Beige Color */
   background-color: #FDF8F0;
   color: #1a1a1a;
-  font-family: 'DM Sans', sans-serif; /* A modern, friendly font */
+  font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FDF8F0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00C853;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00b548;
+}
+
+/* Smooth transitions */
+button, a {
+  @apply transition-all duration-300 ease-out;
+}
+
+/* Fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Scale up animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Glow animation */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 200, 83, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 200, 83, 0.6);
+  }
+}
+
+/* Card styles */
+.card {
+  @apply bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300;
+}
+
+.card-primary {
+  @apply card bg-gradient-to-br from-white to-gray-50 border border-gray-100;
+}
+
+.btn-primary {
+  @apply px-6 py-3 bg-[#00C853] text-white rounded-full font-bold hover:bg-[#00b548] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-white text-[#1a1a1a] rounded-full font-bold border border-gray-200 hover:bg-gray-50 shadow-sm transition-all;
+}
+
+/* Glass morphism effect */
+.glass {
+  @apply bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl;
 }
