@@ -21,12 +21,10 @@ function Autocomplete({ label, suggestions, value, onChange, icon: Icon }) {
     const [show, setShow] = useState(false)
     const wrapperRef = useRef(null)
 
-    // Filter the list based on what user types
     const filtered = suggestions.filter(item =>
         item.toLowerCase().includes(value.toLowerCase())
     )
 
-    // Close dropdown if clicked outside
     useEffect(() => {
         function handleClickOutside(event) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -43,7 +41,8 @@ function Autocomplete({ label, suggestions, value, onChange, icon: Icon }) {
                 {Icon && <Icon className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-green-600 transition-colors" size={18} />}
                 <input
                     placeholder={label}
-                    className="w-full bg-gray-50 border border-gray-100 pl-10 p-3 rounded-xl focus:ring-2 ring-green-500 focus:bg-white outline-none transition-all font-medium"
+                    // FIX: Added 'text-black' here
+                    className="w-full bg-gray-50 text-black border border-gray-100 pl-10 p-3 rounded-xl focus:ring-2 ring-green-500 focus:bg-white outline-none transition-all font-medium placeholder:text-gray-400"
                     value={value}
                     onChange={e => { onChange(e.target.value); setShow(true) }}
                     onFocus={() => setShow(true)}
@@ -51,12 +50,11 @@ function Autocomplete({ label, suggestions, value, onChange, icon: Icon }) {
                 />
             </div>
 
-            {/* Dropdown List */}
             <AnimatePresence>
                 {show && value && filtered.length > 0 && (
                     <motion.ul
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="absolute z-50 w-full bg-white mt-2 rounded-xl shadow-xl border border-gray-100 max-h-48 overflow-y-auto"
+                        className="absolute z-50 w-full bg-white mt-2 rounded-xl shadow-xl border border-gray-100 max-h-48 overflow-y-auto text-black"
                     >
                         {filtered.map((item) => (
                             <li
@@ -79,9 +77,8 @@ export default function DeliveryBoard({ session }) {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(false)
 
-    // Form Inputs
-    const [store, setStore] = useState('')      // "Store" (formerly platform)
-    const [location, setLocation] = useState('') // "Delivery Location"
+    const [store, setStore] = useState('')
+    const [location, setLocation] = useState('')
     const [items, setItems] = useState('')
 
     const fetchOrders = async () => {
@@ -102,7 +99,6 @@ export default function DeliveryBoard({ session }) {
     const handlePost = async (e) => {
         e.preventDefault()
         setLoading(true)
-        // We save 'store' into the 'platform' column for now to keep DB simple
         await supabase.from('orders').insert([{
             user_email: session.user.email,
             platform: store,
@@ -124,7 +120,6 @@ export default function DeliveryBoard({ session }) {
     return (
         <div className="max-w-xl mx-auto space-y-8 pb-24">
 
-            {/* --- SMART FORM --- */}
             <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white p-6 rounded-[2rem] shadow-sm border border-green-50 relative overflow-visible z-10">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
                     <ShoppingBag className="text-green-600" /> Request Delivery
@@ -132,7 +127,6 @@ export default function DeliveryBoard({ session }) {
 
                 <form onSubmit={handlePost} className="flex flex-col gap-4">
 
-                    {/* Row 1: Store & Location (Smart Inputs) */}
                     <div className="flex flex-col md:flex-row gap-3">
                         <Autocomplete
                             label="Store (e.g. Canteen)"
@@ -150,12 +144,12 @@ export default function DeliveryBoard({ session }) {
                         />
                     </div>
 
-                    {/* Row 2: Items */}
                     <div className="relative group">
                         <ShoppingBag className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-green-600 transition-colors" size={18} />
                         <input
                             placeholder="What do you need? (e.g. 2 Cold Coffees)"
-                            className="w-full bg-gray-50 border border-gray-100 pl-10 p-3 rounded-xl focus:ring-2 ring-green-500 focus:bg-white outline-none transition-all font-medium"
+                            // FIX: Added 'text-black' here too
+                            className="w-full bg-gray-50 text-black border border-gray-100 pl-10 p-3 rounded-xl focus:ring-2 ring-green-500 focus:bg-white outline-none transition-all font-medium placeholder:text-gray-400"
                             value={items}
                             onChange={e => setItems(e.target.value)}
                             required
@@ -168,12 +162,11 @@ export default function DeliveryBoard({ session }) {
                 </form>
             </motion.div>
 
-            {/* --- FEED --- */}
             <div className="space-y-4">
                 {orders.length === 0 && !loading && (
                     <div className="text-center py-10 opacity-50">
                         <div className="text-4xl mb-2">🍔</div>
-                        <p className="font-bold">No active orders</p>
+                        <p className="font-bold text-gray-500">No active orders</p>
                     </div>
                 )}
 
