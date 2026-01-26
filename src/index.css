@@ -107,3 +107,87 @@ button, a {
 .glass {
   @apply bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl;
 }
+
+/* ============================================
+   INTERACTIVE BLOCK ANIMATIONS FOR TABS
+   ============================================ */
+
+:root {
+  --lerp-0: 1;
+  --lerp-1: 0.5625;
+  --lerp-2: 0.25;
+  --lerp-3: 0.0625;
+  --lerp-4: 0;
+}
+
+.tab-blocks {
+  display: flex;
+  list-style-type: none;
+  padding: 8px;
+  border-radius: 50px;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab-blocks:hover {
+  --show: 1;
+}
+
+.tab-block {
+  width: auto;
+  padding: 10px 20px;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  flex: calc(0.2 + (var(--lerp, 0) * 1.5));
+  position: relative;
+  border-radius: 50px;
+  cursor: pointer;
+}
+
+.tab-block:before {
+  content: '';
+  position: absolute;
+  width: calc(100% + 8px);
+  bottom: 0;
+  aspect-ratio: 1 / 2;
+  left: 50%;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) scaleY(var(--show, 0));
+  z-index: -1;
+  background: rgba(0, 200, 83, 0.1);
+  border-radius: 50px;
+}
+
+.tab-block__item {
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: 50% 100%;
+  position: relative;
+  transform: translateY(calc(var(--lerp) * -10px));
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 2;
+}
+
+/* Hover states for adjacent blocks */
+:is(.tab-block:hover, .tab-block:focus-visible) {
+  --lerp: var(--lerp-0);
+  z-index: 5;
+}
+
+.tab-block:has( + :is(.tab-block:hover, .tab-block:focus-visible)),
+:is(.tab-block:hover, .tab-block:focus-visible) + .tab-block {
+  --lerp: var(--lerp-1);
+  z-index: 4;
+}
+
+.tab-block:has( + .tab-block + :is(.tab-block:hover, .tab-block:focus-visible)),
+:is(.tab-block:hover, .tab-block:focus-visible) + .tab-block + .tab-block {
+  --lerp: var(--lerp-2);
+  z-index: 3;
+}

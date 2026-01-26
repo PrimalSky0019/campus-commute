@@ -55,26 +55,30 @@ export default function Dashboard({ session }) {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex justify-center mt-8 mb-8"
             >
-                <div className="bg-white/5 border border-white/10 rounded-full p-2 flex gap-2 backdrop-blur-md shadow-2xl">
+                <ul className="tab-blocks">
                     {tabs.map((tab, idx) => (
-                        <motion.button
+                        <motion.li
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
-                            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
-                                activeTab === tab.id
-                                    ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/10'
-                            }`}
+                            className={`tab-block ${activeTab === tab.id ? 'active' : ''}`}
                         >
-                            {tab.label}
-                        </motion.button>
+                            <motion.button
+                                onClick={() => setActiveTab(tab.id)}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className={`tab-block__item ${
+                                    activeTab === tab.id
+                                        ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                                        : 'text-gray-400 hover:text-white'
+                                }`}
+                            >
+                                {tab.label}
+                            </motion.button>
+                        </motion.li>
                     ))}
-                </div>
+                </ul>
             </motion.div>
 
             {/* --- CONTENT AREA --- */}
