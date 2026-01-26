@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, Clock, Car, Bus, Footprints } from 'lucide-react'
+import { MapPin, Clock, Car, Bus, Footprints, ArrowRight, Navigation } from 'lucide-react'
 
 export default function TravelFeed({ session }) {
     const [plans, setPlans] = useState([])
@@ -35,7 +35,7 @@ export default function TravelFeed({ session }) {
         setLoading(false)
     }
 
-    // Helper to pick icons
+    // Helper to get the right icon
     const getIcon = (mode) => {
         if (mode === 'Bus') return <Bus size={18} />
         if (mode === 'Walking') return <Footprints size={18} />
@@ -44,65 +44,114 @@ export default function TravelFeed({ session }) {
 
     return (
         <div className="max-w-xl mx-auto p-4 space-y-8">
-            {/* --- Animated Form --- */}
+
+            {/* --- FLOATING FORM CARD --- */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/20"
+                className="bg-white p-6 rounded-2xl shadow-xl shadow-blue-500/10 border border-blue-50 relative overflow-hidden"
             >
-                <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                    <MapPin className="text-blue-500" /> Post a Trip
+                {/* Background Decor */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-bl-full -z-10"></div>
+
+                <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                    <Navigation className="text-blue-600 fill-blue-600" size={20} />
+                    Post a Trip
                 </h2>
-                <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-                    <div className="flex gap-2">
-                        <input placeholder="From" className="flex-1 bg-gray-50 border-none p-3 rounded-xl focus:ring-2 ring-blue-500 outline-none transition-all" value={origin} onChange={e => setOrigin(e.target.value)} required />
-                        <input placeholder="To" className="flex-1 bg-gray-50 border-none p-3 rounded-xl focus:ring-2 ring-blue-500 outline-none transition-all" value={destination} onChange={e => setDestination(e.target.value)} required />
+
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    {/* Row 1: From & To */}
+                    <div className="flex flex-col md:flex-row gap-3">
+                        <div className="flex-1 relative group">
+                            <MapPin className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                            <input
+                                placeholder="From (e.g. Hostel)"
+                                className="w-full bg-gray-50 border border-gray-100 pl-10 p-3 rounded-xl focus:ring-2 ring-blue-500 focus:bg-white outline-none transition-all font-medium"
+                                value={origin} onChange={e => setOrigin(e.target.value)} required
+                            />
+                        </div>
+                        <div className="flex-1 relative group">
+                            <MapPin className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                            <input
+                                placeholder="To (e.g. Airport)"
+                                className="w-full bg-gray-50 border border-gray-100 pl-10 p-3 rounded-xl focus:ring-2 ring-indigo-500 focus:bg-white outline-none transition-all font-medium"
+                                value={destination} onChange={e => setDestination(e.target.value)} required
+                            />
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <input placeholder="Time" className="flex-1 bg-gray-50 border-none p-3 rounded-xl focus:ring-2 ring-blue-500 outline-none transition-all" value={time} onChange={e => setTime(e.target.value)} required />
-                        <select className="bg-gray-50 border-none p-3 rounded-xl outline-none" value={mode} onChange={e => setMode(e.target.value)}>
-                            <option>Cab</option><option>Auto</option><option>Walking</option><option>Bus</option>
-                        </select>
+
+                    {/* Row 2: Time & Mode */}
+                    <div className="flex gap-3">
+                        <div className="flex-[2] relative group">
+                            <Clock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                            <input
+                                placeholder="Time (e.g. 5:00 PM)"
+                                className="w-full bg-gray-50 border border-gray-100 pl-10 p-3 rounded-xl focus:ring-2 ring-blue-500 focus:bg-white outline-none transition-all font-medium"
+                                value={time} onChange={e => setTime(e.target.value)} required
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <select
+                                className="w-full h-full bg-gray-50 border border-gray-100 px-3 rounded-xl outline-none focus:ring-2 ring-blue-500 cursor-pointer font-medium text-gray-600"
+                                value={mode} onChange={e => setMode(e.target.value)}
+                            >
+                                <option>Cab</option><option>Auto</option><option>Walking</option><option>Bus</option>
+                            </select>
+                        </div>
                     </div>
+
                     <motion.button
                         whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileTap={{ scale: 0.98 }}
                         disabled={loading}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 rounded-xl font-bold shadow-lg shadow-blue-500/30"
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 mt-2 flex justify-center items-center gap-2 hover:shadow-blue-500/40 transition-shadow"
                     >
-                        {loading ? 'Posting...' : 'Share Plan'}
+                        {loading ? 'Posting...' : 'Share Plan'} <ArrowRight size={18} />
                     </motion.button>
                 </form>
             </motion.div>
 
-            {/* --- Animated Feed --- */}
+            {/* --- ANIMATED LIST --- */}
             <div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-700 px-2">Recent Plans</h3>
+                <div className="flex items-center justify-between px-2">
+                    <h3 className="text-lg font-bold text-gray-700">Recent Plans</h3>
+                    <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-full">{plans.length} Active</span>
+                </div>
+
                 <AnimatePresence>
                     {plans.map((plan, i) => (
                         <motion.div
                             key={plan.id}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.1 }} // Stagger effect
-                            whileHover={{ scale: 1.02, backgroundColor: '#f8fafc' }}
-                            className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group"
+                            transition={{ delay: i * 0.1 }}
+                            whileHover={{ y: -2, boxShadow: "0 10px 30px -10px rgba(0, 0, 0, 0.1)" }}
+                            className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 group cursor-default relative overflow-hidden"
                         >
-                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-400 to-indigo-500"></div>
-                            <div className="flex justify-between items-center pl-4">
+                            {/* Left Accent Bar */}
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-l-2xl"></div>
+
+                            <div className="flex justify-between items-center pl-3">
                                 <div>
-                                    <div className="flex items-center gap-2 text-indigo-500 font-bold mb-1 text-sm">
+                                    <div className="flex items-center gap-2 text-indigo-600 font-bold mb-1 text-[11px] uppercase tracking-wider bg-indigo-50 w-fit px-2 py-0.5 rounded border border-indigo-100">
                                         {getIcon(plan.mode)} {plan.mode}
                                     </div>
-                                    <h3 className="text-lg font-bold text-gray-800">
-                                        {plan.origin} <span className="text-gray-300">➔</span> {plan.destination}
+                                    <h3 className="text-lg font-bold text-gray-800 mt-1 flex items-center gap-2">
+                                        {plan.origin}
+                                        <ArrowRight size={14} className="text-gray-300" />
+                                        {plan.destination}
                                     </h3>
-                                    <div className="flex items-center gap-1 text-gray-400 text-xs mt-1">
-                                        <Clock size={12} /> {plan.travel_time}
+                                    <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-2 font-medium">
+                                        <Clock size={12} className="text-gray-400" />
+                                        Leaving at <span className="text-gray-700 font-bold">{plan.travel_time}</span>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                   <span className="text-xs font-medium bg-gray-100 text-gray-500 px-3 py-1 rounded-full">
+
+                                <div className="flex flex-col items-end">
+                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-white shadow-sm flex items-center justify-center text-gray-600 font-bold text-xs">
+                                        {plan.user_email[0].toUpperCase()}
+                                    </div>
+                                    <span className="text-[10px] text-gray-400 mt-1 font-medium">
                     {plan.user_email.split('@')[0]}
                   </span>
                                 </div>
