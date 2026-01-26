@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, Car, Bus, Footprints, ArrowRight, Users, Check, Flame } from 'lucide-react'
-import { findMatchingOrders } from '../../utils/smartMatcher' // Import the Smart Matcher
+import { Clock, Car, Bus, Footprints, ArrowRight, Users, Check, Flame, Trash2, CheckCircle } from 'lucide-react'
+import { findMatchingOrders } from '../../utils/smartMatcher'
 
 export default function TravelFeed({ session }) {
     const [plans, setPlans] = useState([])
-    const [orders, setOrders] = useState([]) // Store orders to check for matches
+    const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(false)
+    const [completedRides, setCompletedRides] = useState(new Set())
 
     // Form State
     const [origin, setOrigin] = useState('')
@@ -21,9 +22,19 @@ export default function TravelFeed({ session }) {
             .from('travel_plans')
             .select('*')
             .order('created_at', { ascending: false })
-        if (travelData) setPlans(travelData)
+        
+        if (travelData) {
+            // Auto-delete rides older than 24 hours
+            const filteredPlans = travelData.filter(plan => {
+                const createdAt = new Date(plan.created_at)
+                const now = new Date()
+                const hoursDiff = (now - createdAt) / (1000 * 60 * 60)
+                return hoursDiff < 24
+            })
+            setPlans(filteredPlans)
+        }
 
-        // 2. Fetch Open Orders (for Smart Matching)
+        // 2. Fetch Open Orders
         const { data: orderData } = await supabase
             .from('orders')
             .select('*')
@@ -31,10 +42,39 @@ export default function TravelFeed({ session }) {
         if (orderData) setOrders(orderData)
     }
 
+    // Auto-delete outdated rides in background
+    const deleteOutdatedRides = async () => {
+        const { data: allPlans } = await supabase
+            .from('travel_plans')
+            .select('id, created_at')
+        
+        if (allPlans) {
+            const idsToDelete = allPlans
+                .filter(plan => {
+                    const createdAt = new Date(plan.created_at)
+                    const now = new Date()
+                    const hoursDiff = (now - createdAt) / (1000 * 60 * 60)
+                    return hoursDiff >= 24
+                })
+                .map(p => p.id)
+            
+            if (idsToDelete.length > 0) {
+                await supabase
+                    .from('travel_plans')
+                    .delete()
+                    .in('id', idsToDelete)
+            }
+        }
+    }
+
     useEffect(() => {
         fetchData()
+        deleteOutdatedRides()
 
-        // Realtime Subscriptions for both tables
+        // Auto-cleanup every 30 minutes
+        const cleanupInterval = setInterval(deleteOutdatedRides, 30 * 60 * 1000)
+
+        // Realtime Subscriptions
         const travelSub = supabase.channel('travel_realtime')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'travel_plans' }, fetchData)
             .subscribe()
@@ -43,7 +83,11 @@ export default function TravelFeed({ session }) {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchData)
             .subscribe()
 
-        return () => { travelSub.unsubscribe(); orderSub.unsubscribe() }
+        return () => {
+            travelSub.unsubscribe()
+            orderSub.unsubscribe()
+            clearInterval(cleanupInterval)
+        }
     }, [])
 
     const handleSubmit = async (e) => {
@@ -60,7 +104,7 @@ export default function TravelFeed({ session }) {
                 seats_available: mode === 'Cab' ? 3 : 2
             }
         ])
-        if (!error) { setOrigin(''); setDestination(''); }
+        if (!error) { setOrigin(''); setDestination(''); setTime(''); }
         setLoading(false)
     }
 
@@ -79,11 +123,34 @@ export default function TravelFeed({ session }) {
         if (error) console.error(error)
     }
 
+    // DELETE RIDE LOGIC
+    const handleDeleteRide = async (planId) => {
+        if (window.confirm('Are you sure you want to delete this ride?')) {
+            const { error } = await supabase
+                .from('travel_plans')
+                .delete()
+                .eq('id', planId)
+            
+            if (!error) {
+                setPlans(plans.filter(p => p.id !== planId))
+            } else {
+                alert('Error deleting ride')
+            }
+        }
+    }
+
+    // MARK RIDE AS COMPLETED
+    const handleCompleteRide = (planId) => {
+        setCompletedRides(prev => new Set([...prev, planId]))
+    }
+
     const getIcon = (mode) => {
         if (mode === 'Bus') return <Bus size={18} />
         if (mode === 'Walking') return <Footprints size={18} />
         return <Car size={18} />
     }
+
+    const isRideCompleted = (planId) => completedRides.has(planId)
 
     return (
         <div className="max-w-xl mx-auto p-4 space-y-8 pb-24">
@@ -133,8 +200,17 @@ export default function TravelFeed({ session }) {
                                 layout
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 relative group"
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className={`bg-white p-6 rounded-3xl shadow-sm border relative group transition-all ${
+                                    isRideCompleted(plan.id) ? 'border-green-200 bg-green-50' : 'border-gray-100'
+                                }`}
                             >
+                                {/* COMPLETED BADGE */}
+                                {isRideCompleted(plan.id) && (
+                                    <div className="absolute top-4 right-4 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                                        <CheckCircle size={14} /> Completed
+                                    </div>
+                                )}
                                 {/* --- SMART BADGE (Visible if matches exist) --- */}
                                 {matches.length > 0 && (
                                     <div className="mb-4 bg-orange-50 border border-orange-100 p-3 rounded-xl flex items-center gap-3 animate-pulse">
@@ -179,31 +255,57 @@ export default function TravelFeed({ session }) {
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t border-gray-50 flex justify-between items-center">
+                                <div className="pt-4 border-t border-gray-50 flex justify-between items-center gap-2 flex-wrap">
                   <span className="text-xs font-medium text-gray-400">
                     Posted by {plan.user_email.split('@')[0]}
                   </span>
 
-                                    {!isMyRide && !hasJoined && !isFull && (
-                                        <button
-                                            onClick={() => handleJoin(plan.id, plan.passengers || [], plan.seats_available)}
-                                            className="bg-black text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-gray-800 transition-colors flex items-center gap-2"
-                                        >
-                                            Join Ride <Users size={14} />
-                                        </button>
-                                    )}
+                                    <div className="flex gap-2 items-center">
+                                        {/* DELETE BUTTON - Only for ride creator */}
+                                        {isMyRide && (
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => handleDeleteRide(plan.id)}
+                                                className="bg-red-50 text-red-600 px-3 py-2 rounded-full text-sm font-bold hover:bg-red-100 transition-colors flex items-center gap-1"
+                                            >
+                                                <Trash2 size={14} /> Delete
+                                            </motion.button>
+                                        )}
 
-                                    {hasJoined && (
-                                        <span className="text-green-600 font-bold text-sm flex items-center gap-1 bg-green-50 px-3 py-1 rounded-full">
-                      <Check size={14} /> Joined
-                    </span>
-                                    )}
+                                        {/* MARK COMPLETE BUTTON - Only for ride creator */}
+                                        {isMyRide && !isRideCompleted(plan.id) && (
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => handleCompleteRide(plan.id)}
+                                                className="bg-green-50 text-green-600 px-3 py-2 rounded-full text-sm font-bold hover:bg-green-100 transition-colors flex items-center gap-1"
+                                            >
+                                                <CheckCircle size={14} /> Complete
+                                            </motion.button>
+                                        )}
 
-                                    {isFull && !hasJoined && (
-                                        <span className="text-gray-400 font-bold text-sm bg-gray-100 px-3 py-1 rounded-full">
-                      Full
-                    </span>
-                                    )}
+                                        {!isMyRide && !hasJoined && !isFull && (
+                                            <button
+                                                onClick={() => handleJoin(plan.id, plan.passengers || [], plan.seats_available)}
+                                                className="bg-black text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-gray-800 transition-colors flex items-center gap-2"
+                                            >
+                                                Join Ride <Users size={14} />
+                                            </button>
+                                        )}
+
+                                        {hasJoined && (
+                                            <span className="text-green-600 font-bold text-sm flex items-center gap-1 bg-green-50 px-3 py-1 rounded-full">
+                          <Check size={14} /> Joined
+                        </span>
+                                        )}
+
+                                        {isFull && !hasJoined && (
+                                            <span className="text-gray-400 font-bold text-sm bg-gray-100 px-3 py-1 rounded-full">
+                          Full
+                        </span>
+                                        )}
+                                    </div>
                                 </div>
                             </motion.div>
                         )
