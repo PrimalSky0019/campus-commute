@@ -166,12 +166,12 @@ export default function TravelFeed({ session }) {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div className="flex gap-3">
-                        <input placeholder="From" className="flex-1 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 ring-blue-500" value={origin} onChange={e => setOrigin(e.target.value)} required />
-                        <input placeholder="To" className="flex-1 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 ring-blue-500" value={destination} onChange={e => setDestination(e.target.value)} required />
+                        <input placeholder="From" className="flex-1 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 ring-blue-500 text-black placeholder-gray-500" value={origin} onChange={e => setOrigin(e.target.value)} required />
+                        <input placeholder="To" className="flex-1 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 ring-blue-500 text-black placeholder-gray-500" value={destination} onChange={e => setDestination(e.target.value)} required />
                     </div>
                     <div className="flex gap-3">
-                        <input placeholder="Time" className="flex-1 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 ring-blue-500" value={time} onChange={e => setTime(e.target.value)} required />
-                        <select className="bg-gray-50 p-3 rounded-xl outline-none" value={mode} onChange={e => setMode(e.target.value)}>
+                        <input placeholder="Time" className="flex-1 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 ring-blue-500 text-black placeholder-gray-500" value={time} onChange={e => setTime(e.target.value)} required />
+                        <select className="bg-gray-50 p-3 rounded-xl outline-none text-black font-medium" value={mode} onChange={e => setMode(e.target.value)}>
                             <option>Cab</option><option>Auto</option><option>Walking</option>
                         </select>
                     </div>

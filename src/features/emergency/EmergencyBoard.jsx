@@ -140,7 +140,7 @@ export default function EmergencyBoard({ session }) {
                     <div>
                         <label className="text-sm font-bold text-gray-700 mb-2 block">Type of Help</label>
                         <select
-                            className="w-full p-3 bg-white border-2 border-orange-200 rounded-xl outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 font-medium transition-all"
+                            className="w-full p-3 bg-white border-2 border-orange-200 rounded-xl outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 font-medium transition-all text-black"
                             value={type} 
                             onChange={e => setType(e.target.value)}
                         >
@@ -155,7 +155,7 @@ export default function EmergencyBoard({ session }) {
                         <label className="text-sm font-bold text-gray-700 mb-2 block">Description</label>
                         <textarea
                             placeholder="Tell us what help you need..."
-                            className="w-full p-3 bg-white border-2 border-orange-200 rounded-xl outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 h-24 resize-none font-medium transition-all"
+                            className="w-full p-3 bg-white border-2 border-orange-200 rounded-xl outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 h-24 resize-none font-medium transition-all text-black placeholder-gray-500"
                             value={desc} 
                             onChange={e => setDesc(e.target.value)}
                             required
