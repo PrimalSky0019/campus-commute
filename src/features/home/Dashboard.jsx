@@ -5,6 +5,7 @@ import TravelFeed from '../travel/TravelFeed'
 import DeliveryBoard from '../delivery/DeliveryBoard'
 import EmergencyBoard from '../emergency/EmergencyBoard'
 import ActivityHistory from './ActivityHistory'
+import ProfileSection from './ProfileSection'
 
 export default function Dashboard({ session }) {
     const [activeTab, setActiveTab] = useState('travel')
@@ -123,7 +124,7 @@ export default function Dashboard({ session }) {
                     {activeTab === 'travel' && <TravelFeed session={session} />}
                     {activeTab === 'delivery' && <DeliveryBoard session={session} />}
                     {activeTab === 'safety' && <EmergencyBoard session={session} />}
-                    {activeTab === 'profile' && <ActivityHistory session={session} />}
+                    {activeTab === 'profile' && <ProfileSection session={session} />}
                 </motion.div>
             </div>
 
