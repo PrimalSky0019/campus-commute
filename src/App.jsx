@@ -61,7 +61,65 @@ function App() {
 
     // 1. Loading State (Prevent flickering)
     if (hasProfile === null) {
-        return <div className="min-h-screen bg-[#FDF8F0] flex items-center justify-center font-bold text-gray-400">Loading CampusCommute...</div>
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[#FDF8F0] via-white to-[#F5F5F5] flex flex-col items-center justify-center font-sans relative overflow-hidden">
+                {/* Animated background orbs */}
+                <motion.div
+                    className="fixed top-0 right-0 w-96 h-96 bg-[#00C853]/5 rounded-full blur-3xl pointer-events-none"
+                    animate={{ y: [0, 50, 0], x: [0, 30, 0] }}
+                    transition={{ duration: 8, repeat: Infinity }}
+                />
+                <motion.div
+                    className="fixed bottom-0 left-0 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl pointer-events-none"
+                    animate={{ y: [0, -50, 0], x: [0, -30, 0] }}
+                    transition={{ duration: 10, repeat: Infinity }}
+                />
+
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative z-10 flex flex-col items-center gap-8"
+                >
+                    {/* Logo Animation */}
+                    <motion.div
+                        className="w-20 h-20 bg-gradient-to-br from-[#00C853] to-[#00b548] rounded-full flex items-center justify-center text-white font-black text-3xl shadow-xl"
+                        animate={{ scale: [1, 1.1, 1], rotate: [0, 360] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                        🏫
+                    </motion.div>
+
+                    {/* Loading Text */}
+                    <div className="text-center">
+                        <motion.h2 
+                            className="text-3xl font-black text-[#1a1a1a] mb-2"
+                            animate={{ opacity: [0.7, 1, 0.7] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                        >
+                            Campus Commute
+                        </motion.h2>
+                        <p className="text-gray-500 font-medium text-sm">Connecting your campus one ride at a time</p>
+                    </div>
+
+                    {/* Loading Spinner */}
+                    <motion.div 
+                        className="flex gap-2"
+                    >
+                        {[0, 1, 2].map(i => (
+                            <motion.div
+                                key={i}
+                                className="w-3 h-3 bg-[#00C853] rounded-full"
+                                animate={{ y: [0, -12, 0] }}
+                                transition={{ delay: i * 0.15, duration: 0.8, repeat: Infinity }}
+                            />
+                        ))}
+                    </motion.div>
+
+                    <p className="text-gray-400 text-xs font-medium">Loading your experience...</p>
+                </motion.div>
+            </div>
+        )
     }
 
     // 2. Dashboard (Logged in + Has Profile)
