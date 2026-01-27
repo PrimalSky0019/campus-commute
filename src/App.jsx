@@ -135,20 +135,40 @@ function App() {
     // 4. Login Screen
     if (showLogin) {
         return (
-            <div className="min-h-screen w-full flex items-center justify-center bg-[#FDF8F0]">
-                <div className="absolute top-6 left-6 z-20">
-                    <button onClick={() => setShowLogin(false)} className="text-gray-500 font-bold hover:text-black">← Back</button>
-                </div>
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#FDF8F0] via-white to-[#F5F5F5]"
+            >
+                <motion.div 
+                    initial={{ x: -40, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className="absolute top-6 left-6 z-20"
+                >
+                    <motion.button 
+                        onClick={() => setShowLogin(false)}
+                        whileHover={{ scale: 1.1, x: -5 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="text-gray-500 font-bold hover:text-black transition-colors flex items-center gap-2"
+                    >
+                        ← Back to Home
+                    </motion.button>
+                </motion.div>
                 <Login />
-            </div>
+            </motion.div>
         )
     }
 
     // 5. Landing Page (Default)
     return (
-        <div className="w-full min-h-screen">
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="w-full min-h-screen"
+        >
             <LandingPage onGetStarted={() => setShowLogin(true)} />
-        </div>
+        </motion.div>
     )
 }
 
