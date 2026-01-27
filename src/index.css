@@ -86,6 +86,78 @@ button, a {
   }
 }
 
+/* Pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Bounce animation */
+@keyframes bounce-smooth {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gradient shift animation */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Color pulse animation */
+@keyframes colorPulse {
+  0%, 100% {
+    color: #1a1a1a;
+  }
+  50% {
+    color: #00C853;
+  }
+}
+
 /* Card styles */
 .card {
   @apply bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300;
@@ -190,4 +262,119 @@ button, a {
 :is(.tab-block:hover, .tab-block:focus-visible) + .tab-block + .tab-block {
   --lerp: var(--lerp-2);
   z-index: 3;
+}
+
+/* ============================================
+   UTILITY ANIMATIONS & EFFECTS
+   ============================================ */
+
+/* Floating effect */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pulse effect */
+.animate-pulse-custom {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Bounce effect */
+.animate-bounce-smooth {
+  animation: bounce-smooth 2s infinite;
+}
+
+/* Shimmer effect */
+.animate-shimmer {
+  animation: shimmer 3s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background-size: 1000px 100%;
+}
+
+/* Glow effect */
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Color pulse effect */
+.animate-color-pulse {
+  animation: colorPulse 2s ease-in-out infinite;
+}
+
+/* Gradient shift effect */
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+/* Fade in effect */
+.fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Slide in effect */
+.slide-in-left {
+  animation: slideInLeft 0.6s ease-out;
+}
+
+/* Scale in effect */
+.scale-in {
+  animation: scaleIn 0.6s ease-out;
+}
+
+/* Card hover effect */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-2;
+}
+
+/* Button hover effect */
+.btn-hover {
+  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:scale-95;
+}
+
+/* Smooth gradient text */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-green-500 to-green-600;
+  animation: gradientShift 3s ease infinite;
+}
+
+/* Enhanced shadow */
+.shadow-soft {
+  @apply shadow-[0_8px_32px_rgba(0,0,0,0.08)];
+}
+
+.shadow-glow {
+  @apply shadow-[0_0_40px_rgba(0,200,83,0.1)] hover:shadow-[0_0_60px_rgba(0,200,83,0.2)];
+}
+
+/* Smooth border */
+.border-soft {
+  @apply border border-gray-200/50 hover:border-green-200/50 transition-all;
+}
+
+/* Loading skeleton */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+  animation: skeleton-loading 2s infinite;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .animate-float {
+    animation: none;
+  }
+  
+  .tab-block {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
 }

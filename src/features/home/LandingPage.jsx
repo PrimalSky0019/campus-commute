@@ -7,28 +7,48 @@ const FeatureCard = ({ title, desc, icon, bg, btn, delay, isTall }) => (
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ delay, duration: 0.6 }}
+        whileHover={{ y: -10 }}
         className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:shadow-2xl cursor-pointer ${bg} ${isTall ? 'md:row-span-2' : ''}`}
     >
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-50 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white to-transparent"></div>
         
         <div className="relative z-10">
             <motion.div 
-                className="mb-6 text-[#1a1a1a]"
-                whileHover={{ scale: 1.15, rotate: 10 }}
-                transition={{ type: "spring", stiffness: 200 }}
+                className="mb-6 text-[#1a1a1a] origin-center"
+                whileHover={{ scale: 1.25, rotate: 15 }}
+                transition={{ type: "spring", stiffness: 200, damping: 10 }}
             >
                 {icon}
             </motion.div>
             
-            <h3 className="text-2xl font-bold mb-3 text-[#1a1a1a]">{title}</h3>
-            <p className="text-gray-600 font-medium mb-6 text-sm leading-relaxed">{desc}</p>
+            <motion.h3 
+                className="text-2xl font-bold mb-3 text-[#1a1a1a]"
+                whileHover={{ letterSpacing: "0.05em" }}
+                transition={{ duration: 0.3 }}
+            >
+                {title}
+            </motion.h3>
+            <motion.p 
+                className="text-gray-600 font-medium mb-6 text-sm leading-relaxed"
+                whileHover={{ color: "#1a1a1a" }}
+                transition={{ duration: 0.3 }}
+            >
+                {desc}
+            </motion.p>
             
             <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.08, x: 5 }}
                 whileTap={{ scale: 0.95 }}
-                className={`${btn} text-white font-bold rounded-full px-6 py-2.5 shadow-lg hover:shadow-xl transition-all group-hover:translate-x-1`}
+                className={`${btn} text-white font-bold rounded-full px-6 py-2.5 shadow-lg hover:shadow-xl transition-all group-hover:translate-x-1 relative overflow-hidden`}
             >
-                Explore →
+                <motion.span
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "100%" }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute inset-0 bg-white/20"
+                />
+                <span className="relative">Explore →</span>
             </motion.button>
         </div>
     </motion.div>
@@ -40,12 +60,36 @@ const Stat = ({ number, label, color, delay }) => (
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ delay, duration: 0.6 }}
-        className="text-center"
+        whileHover={{ scale: 1.1, y: -5 }}
+        className="text-center cursor-pointer group"
     >
-        <div className={`text-5xl md:text-6xl font-black ${color} mb-3 font-sans`}>
-            {number}
-        </div>
-        <p className="text-gray-500 font-medium text-lg">{label}</p>
+        <motion.div 
+            className={`text-5xl md:text-6xl font-black ${color} mb-3 font-sans relative`}
+            whileHover={{ fontSize: "3.75rem" }}
+            transition={{ duration: 0.3 }}
+        >
+            <motion.span
+                whileHover={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+            >
+                {number}
+            </motion.span>
+            <motion.span
+                initial={{ opacity: 0 }}
+                whileHover={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 text-gradient"
+            >
+                {number}
+            </motion.span>
+        </motion.div>
+        <motion.p 
+            className="text-gray-500 font-medium text-lg"
+            whileHover={{ color: "#1a1a1a", fontWeight: 700 }}
+            transition={{ duration: 0.3 }}
+        >
+            {label}
+        </motion.p>
     </motion.div>
 )
 
@@ -102,26 +146,34 @@ export default function LandingPage({ onGetStarted }) {
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="group"
                 >
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[#1a1a1a] mb-6 leading-[0.95]">
+                    <motion.h1 
+                        className="text-6xl md:text-8xl font-black tracking-tighter text-[#1a1a1a] mb-6 leading-[0.95] group-hover:tracking-wider transition-all duration-300"
+                        whileHover={{ color: "#00C853" }}
+                        transition={{ duration: 0.3 }}
+                    >
                         Campus <br />
                         <span className="inline-flex items-center mx-2 align-middle">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: '160px' }}
                                 transition={{ delay: 0.5, duration: 0.8, type: "spring" }}
-                                className="h-[80px] rounded-full bg-[url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center border-4 border-[#FDF8F0] overflow-hidden shadow-lg"
+                                whileHover={{ width: '180px', boxShadow: '0 20px 50px rgba(0, 200, 83, 0.3)' }}
+                                className="h-[80px] rounded-full bg-[url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center border-4 border-[#FDF8F0] overflow-hidden shadow-lg transition-all"
                             />
                         </span>
                         is Living.
-                    </h1>
+                    </motion.h1>
                 </motion.div>
 
                 <motion.p
                     initial={{ opacity: 0 }} 
                     animate={{ opacity: 1 }} 
                     transition={{ delay: 0.6, duration: 0.8 }}
-                    className="text-xl md:text-2xl text-gray-600 max-w-2xl font-medium mb-10 leading-relaxed"
+                    className="text-xl md:text-2xl text-gray-600 max-w-2xl font-medium mb-10 leading-relaxed cursor-default"
+                    whileHover={{ color: "#1a1a1a", letterSpacing: "0.02em" }}
+                    transition={{ duration: 0.3 }}
                 >
                     Travel together. Eat together. Stay safe together. <br/>
                     <span className="font-bold text-[#00C853]">The all-in-one platform for student life.</span>
@@ -135,18 +187,30 @@ export default function LandingPage({ onGetStarted }) {
                 >
                     <motion.button 
                         onClick={onGetStarted}
-                        whileHover={{ scale: 1.05, y: -5 }}
+                        whileHover={{ scale: 1.08, y: -8 }}
                         whileTap={{ scale: 0.95 }}
-                        className="px-8 py-4 bg-[#00C853] text-white rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-xl shadow-green-200 hover:shadow-2xl"
+                        className="px-8 py-4 bg-[#00C853] text-white rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-xl shadow-green-200 hover:shadow-2xl relative overflow-hidden group"
                     >
-                        Get Started <ArrowRight size={20} />
+                        <motion.span
+                            initial={{ x: "-100%" }}
+                            whileHover={{ x: "100%" }}
+                            transition={{ duration: 0.5 }}
+                            className="absolute inset-0 bg-white/20"
+                        />
+                        <span className="relative">Get Started</span> <ArrowRight size={20} />
                     </motion.button>
                     <motion.button 
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.08, y: -8 }}
                         whileTap={{ scale: 0.95 }}
-                        className="px-8 py-4 bg-white text-[#1a1a1a] border-2 border-gray-300 rounded-full font-bold text-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2 shadow-md"
+                        className="px-8 py-4 bg-white text-[#1a1a1a] border-2 border-gray-300 rounded-full font-bold text-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2 shadow-md group relative overflow-hidden"
                     >
-                        <Play size={18} fill="currentColor" /> Watch Demo
+                        <motion.span
+                            initial={{ opacity: 0, y: -10 }}
+                            whileHover={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
+                        />
+                        <Play size={18} fill="currentColor" /> <span className="relative">Watch Demo</span>
                     </motion.button>
                 </motion.div>
             </section>
@@ -220,6 +284,199 @@ export default function LandingPage({ onGetStarted }) {
                 </div>
             </section>
 
+            {/* --- HOW TO USE SECTION --- */}
+            <section className="py-24 px-6 max-w-6xl mx-auto w-full relative overflow-hidden">
+                <motion.div 
+                    className="absolute -top-32 -right-32 w-96 h-96 bg-green-100 rounded-full opacity-15 blur-3xl"
+                    animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
+                    transition={{ duration: 8, repeat: Infinity }}
+                />
+                
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    className="text-center mb-16 relative z-10"
+                >
+                    <motion.span 
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        className="inline-block bg-gradient-to-r from-green-100 to-yellow-100 text-[#00C853] px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wider"
+                    >
+                        Getting Started
+                    </motion.span>
+                    <h2 className="text-4xl md:text-5xl font-black text-[#1a1a1a] mb-4 mt-6">How to Use Campus Commute</h2>
+                    <p className="text-gray-600 font-medium text-lg max-w-2xl mx-auto">Simple steps to connect, share, and save. Join thousands of students making campus life easier.</p>
+                </motion.div>
+
+                <div className="grid md:grid-cols-3 gap-8 relative z-10">
+                    {[
+                        { 
+                            step: "01", 
+                            title: "🔐 Sign Up", 
+                            desc: "Create your account with your campus email. Takes less than 2 minutes. Verify your identity instantly.",
+                            features: ["Campus Email Required", "One-Click Login", "Profile Setup"]
+                        },
+                        { 
+                            step: "02", 
+                            title: "🎯 Create or Join", 
+                            desc: "Post your travel plans, delivery needs, or emergency requests. Or join existing posts from other students.",
+                            features: ["Post Plans", "Browse Listings", "Smart Matching"]
+                        },
+                        { 
+                            step: "03", 
+                            title: "💰 Save & Connect", 
+                            desc: "Connect with peers, split costs, share rides, pool orders. Track your savings and build your community.",
+                            features: ["Real-time Chat", "Cost Split", "Community"]
+                        }
+                    ].map((item, idx) => (
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.15 }}
+                            whileHover={{ y: -12, boxShadow: "0 30px 60px rgba(0, 200, 83, 0.12)" }}
+                            className="bg-white rounded-3xl p-8 border border-gray-100 hover:border-green-200 transition-all relative overflow-hidden group"
+                        >
+                            <motion.div
+                                className="absolute inset-0 bg-gradient-to-br from-green-50/0 to-green-50/0 group-hover:from-green-50/50 group-hover:to-green-50/30 transition-all"
+                                initial={{ opacity: 0 }}
+                                whileHover={{ opacity: 1 }}
+                            />
+                            
+                            <motion.div 
+                                className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600 mb-4 relative z-10"
+                                whileHover={{ scale: 1.15 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {item.step}
+                            </motion.div>
+                            
+                            <motion.h3 
+                                className="text-2xl font-bold text-[#1a1a1a] mb-3 relative z-10"
+                                whileHover={{ letterSpacing: "0.05em" }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {item.title}
+                            </motion.h3>
+                            
+                            <motion.p 
+                                className="text-gray-600 font-medium mb-6 relative z-10 leading-relaxed"
+                                whileHover={{ color: "#1a1a1a" }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {item.desc}
+                            </motion.p>
+
+                            <motion.div className="space-y-2 relative z-10">
+                                {item.features.map((feature, fIdx) => (
+                                    <motion.div
+                                        key={fIdx}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: idx * 0.15 + fIdx * 0.08 }}
+                                        className="flex items-center gap-3 text-sm font-medium text-gray-700"
+                                    >
+                                        <motion.div
+                                            className="w-2 h-2 rounded-full bg-green-500"
+                                            whileHover={{ scale: 1.5 }}
+                                        />
+                                        {feature}
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        </motion.div>
+                    ))}
+                </div>
+
+                {/* Use Cases */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.5 }}
+                    className="mt-24 grid md:grid-cols-2 gap-12 relative z-10"
+                >
+                    <div className="space-y-6">
+                        <h3 className="text-3xl font-bold text-[#1a1a1a] mb-8">What You Can Do</h3>
+                        {[
+                            { icon: "🚗", title: "Share Rides", desc: "Going to the airport? Heading home? Find students going your way." },
+                            { icon: "🍔", title: "Pool Food Orders", desc: "Hungry? Order together from Zomato/Blinkit for faster delivery & discounts." },
+                            { icon: "🚨", title: "Emergency Help", desc: "Need assistance? SOS button connects you to the safety network instantly." },
+                            { icon: "👥", title: "Build Community", desc: "Meet peers, make friends, expand your campus network organically." }
+                        ].map((item, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, x: -30 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ x: 8 }}
+                                className="flex gap-4 group cursor-pointer"
+                            >
+                                <motion.div 
+                                    className="text-4xl flex-shrink-0"
+                                    whileHover={{ scale: 1.3, rotate: 10 }}
+                                    transition={{ type: "spring", stiffness: 200 }}
+                                >
+                                    {item.icon}
+                                </motion.div>
+                                <div className="group-hover:translate-x-1 transition-transform">
+                                    <h4 className="font-bold text-lg text-[#1a1a1a] mb-1">{item.title}</h4>
+                                    <p className="text-gray-600 text-sm">{item.desc}</p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3 }}
+                        whileHover={{ boxShadow: "0 40px 80px rgba(0, 200, 83, 0.15)" }}
+                        className="bg-gradient-to-br from-green-50 to-yellow-50 rounded-3xl p-12 border border-green-100 relative overflow-hidden h-fit sticky top-24"
+                    >
+                        <motion.div
+                            className="absolute top-0 right-0 w-40 h-40 bg-green-200 rounded-full opacity-20 blur-3xl"
+                            animate={{ x: [0, 20, 0], y: [0, -20, 0] }}
+                            transition={{ duration: 6, repeat: Infinity }}
+                        />
+                        <div className="relative z-10">
+                            <motion.div 
+                                className="text-6xl mb-4"
+                                animate={{ y: [0, -5, 0] }}
+                                transition={{ duration: 3, repeat: Infinity }}
+                            >
+                                ✨
+                            </motion.div>
+                            <h4 className="text-2xl font-black text-[#1a1a1a] mb-4">Pro Tips</h4>
+                            <ul className="space-y-4 text-sm">
+                                <li className="flex gap-3">
+                                    <span className="text-lg">⚡</span>
+                                    <span><strong>Post Early:</strong> Best matches happen in the first hour.</span>
+                                </li>
+                                <li className="flex gap-3">
+                                    <span className="text-lg">🤝</span>
+                                    <span><strong>Be Specific:</strong> Detailed posts get faster responses.</span>
+                                </li>
+                                <li className="flex gap-3">
+                                    <span className="text-lg">⭐</span>
+                                    <span><strong>Rate & Review:</strong> Build trust in the community.</span>
+                                </li>
+                                <li className="flex gap-3">
+                                    <span className="text-lg">🔒</span>
+                                    <span><strong>Stay Safe:</strong> Use our verified system always.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            </section>
+
             {/* --- TESTIMONIAL SECTION --- */}
             <section className="py-20 px-6 max-w-6xl mx-auto w-full">
                 <motion.div 
@@ -244,13 +501,35 @@ export default function LandingPage({ onGetStarted }) {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: idx * 0.2 }}
-                            className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-all border border-gray-100 text-center"
+                            whileHover={{ y: -8, boxShadow: "0 25px 50px rgba(0, 200, 83, 0.15)" }}
+                            className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-all border border-gray-100 text-center group cursor-pointer relative overflow-hidden"
                         >
-                            <div className="inline-block p-4 bg-green-50 rounded-full text-[#00C853] mb-4">
+                            <motion.div
+                                className="absolute inset-0 bg-gradient-to-br from-[#00C853]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+                                initial={{ opacity: 0 }}
+                                whileHover={{ opacity: 1 }}
+                            />
+                            <motion.div 
+                                className="inline-block p-4 bg-green-50 rounded-full text-[#00C853] mb-4 group-hover:scale-110"
+                                whileHover={{ rotate: 360 }}
+                                transition={{ duration: 0.6 }}
+                            >
                                 {item.icon}
-                            </div>
-                            <h3 className="text-xl font-bold mb-2 text-[#1a1a1a]">{item.title}</h3>
-                            <p className="text-gray-600 font-medium">{item.desc}</p>
+                            </motion.div>
+                            <motion.h3 
+                                className="text-xl font-bold mb-2 text-[#1a1a1a] relative z-10"
+                                whileHover={{ letterSpacing: "0.05em" }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {item.title}
+                            </motion.h3>
+                            <motion.p 
+                                className="text-gray-600 font-medium relative z-10"
+                                whileHover={{ color: "#00C853" }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {item.desc}
+                            </motion.p>
                         </motion.div>
                     ))}
                 </div>
@@ -263,41 +542,87 @@ export default function LandingPage({ onGetStarted }) {
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8 }}
-                    className="bg-gradient-to-br from-white to-gray-50 p-12 rounded-3xl max-w-2xl w-full text-center border-2 border-gray-200 shadow-2xl"
+                    whileHover={{ y: -5 }}
+                    className="bg-gradient-to-br from-white to-gray-50 p-12 rounded-3xl max-w-2xl w-full text-center border-2 border-gray-200 shadow-2xl group relative overflow-hidden"
                 >
-                    <h3 className="text-3xl md:text-4xl font-black mb-3 text-[#1a1a1a]">Ready to Join?</h3>
-                    <p className="text-gray-600 font-medium mb-8 text-lg">Select your role to get started.</p>
+                    <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-30"
+                        initial={{ x: "-100%" }}
+                        whileHover={{ x: "100%" }}
+                        transition={{ duration: 0.8 }}
+                    />
+                    
+                    <motion.h3 
+                        className="text-3xl md:text-4xl font-black mb-3 text-[#1a1a1a] relative z-10"
+                        whileHover={{ letterSpacing: "0.05em" }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        Ready to Join?
+                    </motion.h3>
+                    <motion.p 
+                        className="text-gray-600 font-medium mb-8 text-lg relative z-10"
+                        whileHover={{ color: "#00C853" }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        Select your role to get started.
+                    </motion.p>
 
-                    <div className="flex gap-4 mb-6">
+                    <div className="flex gap-4 mb-6 relative z-10">
                         <motion.button 
-                            whileHover={{ scale: 1.05, y: -5 }}
+                            whileHover={{ scale: 1.08, y: -8 }}
                             whileTap={{ scale: 0.95 }}
-                            className="flex-1 bg-white py-6 rounded-2xl font-bold text-lg border-2 border-gray-300 hover:border-[#00C853] shadow-sm transition-all flex flex-col items-center justify-center gap-3 group"
+                            className="flex-1 bg-white py-6 rounded-2xl font-bold text-lg border-2 border-gray-300 hover:border-[#00C853] shadow-sm transition-all flex flex-col items-center justify-center gap-3 group/btn relative overflow-hidden"
                         >
-                            <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-[#00C853] group-hover:bg-[#00C853] group-hover:text-white transition-colors">
+                            <motion.span
+                                initial={{ opacity: 0 }}
+                                whileHover={{ opacity: 1 }}
+                                transition={{ duration: 0.3 }}
+                                className="absolute inset-0 bg-green-50"
+                                style={{ zIndex: -1 }}
+                            />
+                            <motion.div 
+                                className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-[#00C853] group-hover/btn:bg-[#00C853] group-hover/btn:text-white transition-colors relative z-10"
+                                whileHover={{ scale: 1.2, rotate: 10 }}
+                            >
                                 <Users size={24} />
-                            </div>
-                            <span className="text-[#1a1a1a]">Student</span>
+                            </motion.div>
+                            <span className="text-[#1a1a1a] relative z-10">Student</span>
                         </motion.button>
                         <motion.button 
-                            whileHover={{ scale: 1.05, y: -5 }}
+                            whileHover={{ scale: 1.08, y: -8 }}
                             whileTap={{ scale: 0.95 }}
-                            className="flex-1 bg-white py-6 rounded-2xl font-bold text-lg border-2 border-gray-300 hover:border-blue-500 shadow-sm transition-all flex flex-col items-center justify-center gap-3 group"
+                            className="flex-1 bg-white py-6 rounded-2xl font-bold text-lg border-2 border-gray-300 hover:border-blue-500 shadow-sm transition-all flex flex-col items-center justify-center gap-3 group/btn relative overflow-hidden"
                         >
-                            <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                            <motion.span
+                                initial={{ opacity: 0 }}
+                                whileHover={{ opacity: 1 }}
+                                transition={{ duration: 0.3 }}
+                                className="absolute inset-0 bg-blue-50"
+                                style={{ zIndex: -1 }}
+                            />
+                            <motion.div 
+                                className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 group-hover/btn:bg-blue-500 group-hover/btn:text-white transition-colors relative z-10"
+                                whileHover={{ scale: 1.2, rotate: -10 }}
+                            >
                                 <Coffee size={24} />
-                            </div>
-                            <span className="text-[#1a1a1a]">Faculty</span>
+                            </motion.div>
+                            <span className="text-[#1a1a1a] relative z-10">Faculty</span>
                         </motion.button>
                     </div>
 
                     <motion.button
                         onClick={onGetStarted}
-                        whileHover={{ scale: 1.05, y: -5 }}
+                        whileHover={{ scale: 1.08, y: -8 }}
                         whileTap={{ scale: 0.95 }}
-                        className="w-full bg-gradient-to-r from-[#00C853] to-[#00b548] text-white py-5 rounded-2xl font-bold text-xl transition-all shadow-xl hover:shadow-2xl flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-[#00C853] to-[#00b548] text-white py-5 rounded-2xl font-bold text-xl transition-all shadow-xl hover:shadow-2xl flex items-center justify-center gap-2 relative overflow-hidden group/cta z-10"
                     >
-                        Create Account <ArrowRight size={20} />
+                        <motion.span
+                            initial={{ x: "-100%" }}
+                            whileHover={{ x: "100%" }}
+                            transition={{ duration: 0.5 }}
+                            className="absolute inset-0 bg-white/20"
+                        />
+                        <span className="relative">Create Account</span> <ArrowRight size={20} />
                     </motion.button>
                 </motion.div>
             </section>

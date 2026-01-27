@@ -4,19 +4,41 @@ import { supabase } from './supabaseClient'
 import Login from './features/auth/Login'
 import Dashboard from './features/home/Dashboard'
 import LandingPage from './features/home/LandingPage'
+import Onboarding from './features/auth/Onboarding'
 
 function App() {
     const [session, setSession] = useState(null)
+    const [hasProfile, setHasProfile] = useState(false)
     const [showLogin, setShowLogin] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        // 1. Check Session & Profile on Load
+        const checkUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession()
             setSession(session)
+            
+            if (session) {
+                // Check if profile row exists in DB
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', session.user.id)
+                    .single()
+                
+                if (data) {
+                    setHasProfile(true)
+                }
+            }
             setIsLoading(false)
-        })
+        }
+
+        checkUser()
+
+        // 2. Listen for Auth Changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session)
+            if (!session) setHasProfile(false)
         })
         return () => subscription.unsubscribe()
     }, [])
@@ -33,12 +55,17 @@ function App() {
         )
     }
 
-    // Logged In -> Dashboard
-    if (session) {
+    // SCENARIO 1: User Logged In BUT No Profile -> Show Onboarding
+    if (session && !hasProfile) {
+        return <Onboarding session={session} onComplete={() => setHasProfile(true)} />
+    }
+
+    // SCENARIO 2: User Logged In AND Has Profile -> Show Dashboard
+    if (session && hasProfile) {
         return <Dashboard session={session} />
     }
 
-    // Login Screen
+    // SCENARIO 3: Show Login
     if (showLogin) {
         return (
             <AnimatePresence>
@@ -67,7 +94,7 @@ function App() {
         )
     }
 
-    // Landing Page
+    // SCENARIO 4: Show Landing Page
     return (
         <AnimatePresence>
             <motion.div
