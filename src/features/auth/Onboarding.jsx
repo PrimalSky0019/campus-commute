@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { motion } from 'framer-motion'
 import { Leaf, Drumstick, Plane, Train, ShoppingBag, Home, Bell, Check } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function Onboarding({ session, onComplete }) {
     const [step, setStep] = useState(1)
@@ -39,8 +40,9 @@ export default function Onboarding({ session, onComplete }) {
         })
 
         if (error) {
-            alert("Error saving profile: " + error.message)
+            toast.error("Error saving profile: " + error.message)
         } else {
+            toast.success("Profile saved successfully!")
             onComplete() // Tell App.jsx we are done!
         }
         setLoading(false)
@@ -280,7 +282,7 @@ export default function Onboarding({ session, onComplete }) {
                                 disabled={loading}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="flex-1 bg-[#00C853] text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-200/30"
+                                className="flex-1 bg-[#00C853] text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-200/30 "
                             >
                                 {loading ? (
                                     <motion.span 

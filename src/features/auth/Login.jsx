@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Mail, Lock, Loader } from 'lucide-react'
 import { supabase } from '../../supabaseClient'
+import { toast } from 'sonner'
 
 export default function Login() {
     const [email, setEmail] = useState('')
@@ -29,7 +30,7 @@ export default function Login() {
         } else {
             if (isSignUp) {
                 setError('')
-                alert('Account created! Please check your email to verify (if required) or just switch to Login.')
+                toast.success('Account created! Please check your email to verify (if required) or just switch to Login.')
                 setIsSignUp(false)
             }
         }

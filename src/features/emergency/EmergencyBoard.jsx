@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { motion } from 'framer-motion'
 import { AlertTriangle, MapPin, ShieldAlert, CheckCircle, AlertCircle, Trash2, Check } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function EmergencyBoard({ session }) {
     const [alerts, setAlerts] = useState([])
@@ -16,7 +17,7 @@ export default function EmergencyBoard({ session }) {
         const { data } = await supabase
             .from('emergencies')
             .select('*')
-            .eq('status', 'Active')
+            .neq('status', 'Resolved')
             .order('created_at', { ascending: false })
         if (data) setAlerts(data)
     }
@@ -46,13 +47,13 @@ export default function EmergencyBoard({ session }) {
 
                 setSosLoading(false)
                 fetchAlerts()
-                alert("SOS Broadcasted! Help is on the way.")
+                toast.success("SOS Broadcasted! Help is on the way.")
             }, (error) => {
-                alert("Could not get location. Posting without GPS.")
+                toast.warning("Could not get location. Posting without GPS.")
                 setSosLoading(false)
             })
         } else {
-            alert("Geolocation not supported.")
+            toast.error("Geolocation not supported.")
             setSosLoading(false)
         }
     }
@@ -73,7 +74,7 @@ export default function EmergencyBoard({ session }) {
     const handleResolve = async (id, alertEmail) => {
         // Security check: Only allow the creator to resolve their alert
         if (session.user.email !== alertEmail) {
-            alert('You can only resolve your own alerts!')
+            toast.error('You can only resolve your own alerts!')
             return
         }
 
@@ -85,11 +86,11 @@ export default function EmergencyBoard({ session }) {
                 .eq('id', id)
             
             if (error) {
-                alert("Error resolving: " + error.message)
+                toast.error("Error resolving: " + error.message)
             } else {
                 // Remove from the active view immediately
                 setAlerts(alerts.filter(a => a.id !== id))
-                alert('Alert resolved successfully.')
+                toast.success('Alert resolved successfully.')
             }
         }
     }

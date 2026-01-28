@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingBag, MapPin, Truck, CheckCircle, Search, Star, Utensils, Coffee, Pizza } from 'lucide-react'
+import SkeletonCard from '../../components/SkeletonCard'
 
 // --- THEME CONSTANTS (BUNBITE STYLE) ---
 const THEME = {
@@ -23,7 +24,8 @@ const CATEGORIES = [
 const CAMPUS_LOCATIONS = [
   "Hostel 1", "Hostel 2", "Hostel 3", "Girls Hostel",
   "Main Building", "Library", "Computer Center",
-  "Sports Complex", "Main Gate", "Faculty Quarters"
+  "Sports Complex", "Main Gate", "Faculty Quarters",
+  "Food Street", "Cafeteria", "Auditorium"
 ]
 
 export default function DeliveryBoard({ session }) {
@@ -70,7 +72,7 @@ export default function DeliveryBoard({ session }) {
       {/* --- HERO SECTION (Green Background) --- */}
       <div className={`${THEME.green} relative overflow-hidden pt-24 pb-32 px-6 text-center`}>
         {/* Floating Background Icons (Decoration) */}
-        <Pizza className="absolute top-20 left-10 text-white/10 rotate-12" size={120} />
+        <Pizza className="absolute top-20 left-10 text-white/10 rotate-12" size={122} />
         <Coffee className="absolute bottom-10 right-10 text-white/10 -rotate-12" size={100} />
 
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative z-10">
@@ -161,7 +163,13 @@ export default function DeliveryBoard({ session }) {
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
-          {filteredOrders.length === 0 && (
+          {loading && filteredOrders.length === 0 ? (
+            <div className="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(3)].map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : filteredOrders.length === 0 ? (
              <motion.div 
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
@@ -177,9 +185,9 @@ export default function DeliveryBoard({ session }) {
                <h3 className="text-2xl font-black text-[#2C5F46]">No Orders Yet</h3>
                <p className="text-[#2C5F46]/60 mt-2">Be the first to request a delivery!</p>
              </motion.div>
-          )}
-
-          {filteredOrders.map((order, idx) => {
+          ) : (
+            <>
+              {filteredOrders.map((order, idx) => {
             const isMine = order.user_email === session.user.email
             const isOpen = order.status === 'Open'
             
@@ -286,6 +294,8 @@ export default function DeliveryBoard({ session }) {
               </motion.div>
             )
           })}
+            </>
+          )}
         </div>
       </div>
     </div>

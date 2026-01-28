@@ -3,6 +3,8 @@ import { supabase } from '../../supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Clock, Car, Bus, Footprints, ArrowRight, Users, Check, Flame, Trash2, CheckCircle } from 'lucide-react'
 import { findMatchingOrders } from '../../utils/smartMatcher'
+import { toast } from 'sonner'
+import SkeletonCard from '../../components/SkeletonCard'
 
 export default function TravelFeed({ session }) {
     const [plans, setPlans] = useState([])
@@ -110,7 +112,7 @@ export default function TravelFeed({ session }) {
 
     // JOIN RIDE LOGIC
     const handleJoin = async (planId, currentPassengers, seats) => {
-        if (seats <= 0) return alert("Ride is full!")
+        if (seats <= 0) return toast.error("Ride is full!")
 
         const { error } = await supabase
             .from('travel_plans')
@@ -133,8 +135,9 @@ export default function TravelFeed({ session }) {
             
             if (!error) {
                 setPlans(plans.filter(p => p.id !== planId))
+                toast.success('Ride deleted successfully.')
             } else {
-                alert('Error deleting ride')
+                toast.error('Error deleting ride')
             }
         }
     }
@@ -247,7 +250,13 @@ export default function TravelFeed({ session }) {
             {/* --- FEED --- */}
             <div className="space-y-4 px-2">
                 <AnimatePresence>
-                    {plans.length === 0 ? (
+                    {loading && plans.length === 0 ? (
+                        <div className="space-y-4">
+                            {[...Array(3)].map((_, i) => (
+                                <SkeletonCard key={i} />
+                            ))}
+                        </div>
+                    ) : plans.length === 0 ? (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
