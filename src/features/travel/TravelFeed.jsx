@@ -162,8 +162,15 @@ export default function TravelFeed({ session }) {
 
     const handleDelete = async (planId) => {
         if(!confirm("Delete this trip permanently?")) return;
-        await supabase.from('travel_plans').delete().eq('id', planId)
-        fetchData()
+
+        const { error } = await supabase.from('travel_plans').delete().eq('id', planId)
+
+        if (error) {
+            alert("Delete failed: " + error.message)
+        } else {
+            alert("Trip deleted successfully")
+            fetchData()
+        }
     }
 
     const getIcon = (mode) => {
