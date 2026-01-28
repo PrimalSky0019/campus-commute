@@ -1,318 +1,243 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, Calendar, MapPin, Car, Bus, Footprints, ArrowRight, Users, Check, Flame, Trash2, CheckCircle } from 'lucide-react'
-import { findMatchingOrders } from '../../utils/smartMatcher'
+import { Clock, Calendar, MapPin, ArrowRight, Trash2, TrendingUp, DollarSign, Leaf, Zap } from 'lucide-react'
 
-// --- 1. CAMPUS DATA (For Autocomplete) ---
-const COMMON_LOCATIONS = [
-    "Hostel 1", "Hostel 2", "Girls Hostel", "Main Gate",
-    "Library", "Cafeteria", "Sports Complex", "Admin Block"
+// --- MOCK DATA FOR "ALIVE" FEEL ---
+const TRENDING_LOCATIONS = [
+  { name: 'Airport Terminal 2', count: 12 },
+  { name: 'City Center Mall', count: 8 },
+  { name: 'Railway Station', count: 5 },
 ]
 
-const CITY_HUBS = [
-    "Airport", "Railway Station", "Bus Stand",
-    "City Mall", "Downtown", "Movie Theater"
-]
-
-const ALL_LOCATIONS = [...COMMON_LOCATIONS, ...CITY_HUBS].sort()
-
-// --- 2. AUTOCOMPLETE COMPONENT ---
+// --- COMPONENTS ---
 function LocationInput({ label, value, onChange }) {
-    const [show, setShow] = useState(false)
-    const wrapperRef = useRef(null)
+  const [show, setShow] = useState(false)
+  const wrapperRef = useRef(null)
+  
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) setShow(false)
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [wrapperRef])
 
-    const filtered = ALL_LOCATIONS.filter(item =>
-        item.toLowerCase().includes(value.toLowerCase())
-    )
+  const suggestions = ["Hostel 1", "Hostel 2", "Library", "Main Gate", "Cafeteria", "Airport", "Railway Station", "City Mall"]
 
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setShow(false)
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside)
-        return () => document.removeEventListener("mousedown", handleClickOutside)
-    }, [wrapperRef])
+  return (
+    <div className="relative flex-1 group" ref={wrapperRef}>
+      <div className="absolute left-4 top-4 text-gray-400 group-focus-within:text-blue-600 transition-colors">
+        <MapPin size={20} />
+      </div>
+      <input 
+        placeholder={label} 
+        className="w-full bg-gray-50 text-gray-900 placeholder:text-gray-400 pl-12 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white border border-transparent focus:border-blue-500 transition-all font-medium" 
+        value={value} 
+        onChange={e => { onChange(e.target.value); setShow(true) }}
+        onFocus={() => setShow(true)}
+      />
+      {show && value && (
+        <div className="absolute z-50 w-full bg-white mt-2 rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          {suggestions.filter(i => i.toLowerCase().includes(value.toLowerCase())).map(item => (
+             <div key={item} onClick={() => { onChange(item); setShow(false) }} className="px-5 py-3 hover:bg-blue-50 hover:text-blue-600 cursor-pointer text-sm font-medium text-gray-600 transition-colors border-b border-gray-50 last:border-0">
+               {item}
+             </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
+function StatCard({ icon, label, value, color }) {
     return (
-        <div className="relative flex-1 group" ref={wrapperRef}>
-            <MapPin className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={18} />
-            <input
-                placeholder={label}
-                className="w-full bg-gray-50 text-black placeholder:text-gray-400 pl-10 p-3 rounded-xl outline-none focus:ring-2 ring-blue-500 border border-gray-100 transition-all"
-                value={value}
-                onChange={e => { onChange(e.target.value); setShow(true) }}
-                onFocus={() => setShow(true)}
-                required
-            />
-
-            <AnimatePresence>
-                {show && value && filtered.length > 0 && (
-                    <motion.ul
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="absolute z-50 w-full bg-white mt-2 rounded-xl shadow-xl border border-gray-100 max-h-48 overflow-y-auto"
-                    >
-                        {filtered.map((item) => (
-                            <li
-                                key={item}
-                                onClick={() => { onChange(item); setShow(false) }}
-                                className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm font-medium text-gray-700 border-b border-gray-50 last:border-0"
-                            >
-                                {item}
-                            </li>
-                        ))}
-                    </motion.ul>
-                )}
-            </AnimatePresence>
+        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
+                {icon}
+            </div>
+            <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
+                <p className="text-xl font-black text-gray-900">{value}</p>
+            </div>
         </div>
     )
 }
 
-// --- 3. MAIN COMPONENT ---
 export default function TravelFeed({ session }) {
-    const [plans, setPlans] = useState([])
-    const [orders, setOrders] = useState([])
-    const [loading, setLoading] = useState(false)
+  const [plans, setPlans] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({ origin: '', dest: '', date: '', time: '', mode: 'Cab' })
 
-    // Form State
-    const [origin, setOrigin] = useState('')
-    const [destination, setDestination] = useState('')
-    const [date, setDate] = useState('')
-    const [time, setTime] = useState('')
-    const [mode, setMode] = useState('Cab')
+  const fetchData = async () => {
+    const { data } = await supabase.from('travel_plans').select('*').neq('status', 'Completed').order('travel_time', { ascending: true })
+    if (data) setPlans(data)
+  }
 
-    const fetchData = async () => {
-        // Fetch all trips
-        const { data: travelData } = await supabase
-            .from('travel_plans')
-            .select('*')
-            .neq('status', 'Completed') // Don't show completed
-            .order('travel_time', { ascending: true }) // Show soonest first
+  useEffect(() => { fetchData() }, [])
 
-        if (travelData) {
-            // CLIENT-SIDE FILTER: Hide trips that are in the past
-            const now = new Date()
-            const activeTrips = travelData.filter(trip => {
-                const tripDate = new Date(trip.travel_time)
-                return tripDate > now // Only keep future trips
-            })
-            setPlans(activeTrips)
-        }
-
-        const { data: orderData } = await supabase.from('orders').select('*').eq('status', 'Open')
-        if (orderData) setOrders(orderData)
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    const { error } = await supabase.from('travel_plans').insert([{ 
+        user_email: session.user.email, origin: form.origin, destination: form.dest, 
+        travel_time: new Date(`${form.date}T${form.time}`).toISOString(), 
+        mode: form.mode, passengers: [], seats_available: 3, status: 'Open'
+    }])
+    if (!error) { 
+      setForm({ origin: '', dest: '', date: '', time: '', mode: 'Cab' })
+      alert("Trip posted successfully!")
+      fetchData()
     }
+    setLoading(false)
+  }
 
-    useEffect(() => {
-        fetchData()
-        // Refresh every minute to auto-remove expired trips without reloading
-        const interval = setInterval(fetchData, 60000)
+  const handleDelete = async (id) => {
+    if(!confirm("Delete trip?")) return;
+    await supabase.from('travel_plans').delete().eq('id', id)
+    fetchData()
+    alert("Trip deleted")
+  }
 
-        const travelSub = supabase.channel('travel_realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'travel_plans' }, fetchData).subscribe()
-        return () => { travelSub.unsubscribe(); clearInterval(interval) }
-    }, [])
+  return (
+    <div className="max-w-6xl mx-auto pb-24">
+      
+      {/* --- WELCOME BANNER --- */}
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2rem] p-8 md:p-10 mb-10 text-white shadow-xl relative overflow-hidden"
+      >
+        <div className="relative z-10">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Hello, {session.user.email.split('@')[0]}! 👋</h1>
+            <p className="text-blue-100 text-lg">Ready to save money on your next commute?</p>
+        </div>
+        
+        {/* Decorative Circles */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400 opacity-20 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4"></div>
+      </motion.div>
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        setLoading(true)
-
-        // Create a proper ISO Date String so we can sort/filter it
-        const isoDateTime = new Date(`${date}T${time}`).toISOString()
-
-        const { error } = await supabase.from('travel_plans').insert([{
-            user_email: session.user.email,
-            origin,
-            destination,
-            travel_time: isoDateTime, // Saving as machine-readable time
-            mode,
-            passengers: [],
-            seats_available: mode === 'Cab' ? 3 : 2,
-            status: 'Open'
-        }])
-
-        if (!error) {
-            setOrigin(''); setDestination(''); setDate(''); setTime('')
-            alert("Trip Posted Successfully! 🚗")
-            fetchData()
-        } else {
-            alert(error.message)
-        }
-        setLoading(false)
-    }
-
-    const handleJoin = async (planId, currentPassengers, seats) => {
-        if (seats <= 0) return alert("Ride is full!")
-        await supabase.from('travel_plans').update({
-            passengers: [...currentPassengers, session.user.email], seats_available: seats - 1
-        }).eq('id', planId)
-    }
-
-    // --- NEW: COMPLETE TRIP FUNCTION ---
-    const handleComplete = async (planId) => {
-        if(!confirm("Mark this trip as completed? It will move to history.")) return;
-
-        await supabase.from('travel_plans')
-            .update({ status: 'Completed' }) // Soft delete (moves to history)
-            .eq('id', planId)
-
-        fetchData() // Refresh list
-    }
-
-    const handleDelete = async (planId) => {
-        if(!confirm("Delete this trip permanently?")) return;
-
-        const { error } = await supabase.from('travel_plans').delete().eq('id', planId)
-
-        if (error) {
-            alert("Delete failed: " + error.message)
-        } else {
-            alert("Trip deleted successfully")
-            fetchData()
-        }
-    }
-
-    const getIcon = (mode) => {
-        if (mode === 'Bus') return <Bus size={18} />
-        if (mode === 'Walking') return <Footprints size={18} />
-        return <Car size={18} />
-    }
-
-    // Helper to make the ISO date look nice
-    const formatDisplayTime = (isoString) => {
-        const d = new Date(isoString)
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
-            ' at ' +
-            d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-    }
-
-    return (
-        <div className="max-w-xl mx-auto space-y-8 pb-24">
-
-            {/* --- FORM CARD --- */}
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-6 rounded-[2rem] shadow-xl shadow-blue-500/5 border border-blue-50 relative overflow-visible z-20">
-                <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-                    <div className="bg-blue-100 p-2 rounded-full text-blue-600"><Car size={20} /></div>
-                    Post Your Trip
-                </h2>
-
+      {/* --- MAIN GRID LAYOUT --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* LEFT COLUMN: FORM (Span 5) */}
+        <div className="lg:col-span-5 space-y-6">
+            <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-lg shadow-gray-200/50 sticky top-24">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        <Zap size={20} fill="currentColor" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">Post a Trip</h2>
+                </div>
+                
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    <div className="flex flex-col md:flex-row gap-3 z-30">
-                        <LocationInput label="From (e.g. Hostel 1)" value={origin} onChange={setOrigin} />
-                        <div className="hidden md:flex items-center text-gray-300"><ArrowRight size={20}/></div>
-                        <LocationInput label="To (e.g. Airport)" value={destination} onChange={setDestination} />
+                    <LocationInput label="From (e.g. Hostel)" value={form.origin} onChange={v => setForm({...form, origin: v})} />
+                    <LocationInput label="To (e.g. Airport)" value={form.dest} onChange={v => setForm({...form, dest: v})} />
+
+                    <div className="flex gap-3">
+                        <input type="date" className="flex-1 bg-gray-50 p-4 rounded-2xl outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 font-medium text-gray-600" value={form.date} onChange={e => setForm({...form, date: e.target.value})} required />
+                        <input type="time" className="flex-1 bg-gray-50 p-4 rounded-2xl outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 font-medium text-gray-600" value={form.time} onChange={e => setForm({...form, time: e.target.value})} required />
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
-                        <div className="flex-1 relative group min-w-[140px]">
-                            <Calendar className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-600" size={18} />
-                            <input type="date" className="w-full bg-gray-50 text-black pl-10 p-3 rounded-xl outline-none focus:ring-2 ring-blue-500 border border-gray-100" value={date} onChange={e => setDate(e.target.value)} required />
-                        </div>
-                        <div className="flex-1 relative group min-w-[120px]">
-                            <Clock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-600" size={18} />
-                            <input type="time" className="w-full bg-gray-50 text-black pl-10 p-3 rounded-xl outline-none focus:ring-2 ring-blue-500 border border-gray-100" value={time} onChange={e => setTime(e.target.value)} required />
-                        </div>
-                        <div className="relative min-w-[100px]">
-                            <select className="w-full h-full bg-gray-50 text-black p-3 rounded-xl outline-none focus:ring-2 ring-blue-500 border border-gray-100 font-medium cursor-pointer" value={mode} onChange={e => setMode(e.target.value)}>
-                                <option>Cab</option><option>Auto</option><option>Walking</option><option>Bus</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button disabled={loading} className="w-full bg-[#1a1a1a] text-white py-4 rounded-xl font-bold mt-2 hover:scale-[1.02] transition-transform shadow-lg shadow-gray-200">
-                        {loading ? 'Publishing Trip...' : 'Share Trip 🚀'}
+                    <button disabled={loading} className="w-full bg-black text-white py-4 rounded-2xl font-bold text-lg hover:bg-gray-800 transition-all shadow-lg active:scale-95 disabled:opacity-50 mt-2">
+                        {loading ? 'Posting...' : 'Share Ride 🚀'}
                     </button>
                 </form>
             </motion.div>
 
-            {/* --- FEED --- */}
+            {/* Trending Section (Mock Data to fill space) */}
+            <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hidden lg:block">
+                <div className="flex items-center gap-2 mb-4 text-gray-900 font-bold">
+                    <TrendingUp size={20} className="text-green-500"/> Trending Destinations
+                </div>
+                <div className="space-y-3">
+                    {TRENDING_LOCATIONS.map((loc, i) => (
+                        <div key={i} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-default">
+                            <span className="text-sm font-medium text-gray-600">{loc.name}</span>
+                            <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-md">{loc.count} riders</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+
+        {/* RIGHT COLUMN: STATS & FEED (Span 7) */}
+        <div className="lg:col-span-7 space-y-6">
+            
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <StatCard icon={<DollarSign size={24}/>} label="Money Saved" value="₹1,200" color="bg-green-100 text-green-600" />
+                <StatCard icon={<Leaf size={24}/>} label="CO2 Saved" value="45 kg" color="bg-emerald-100 text-emerald-600" />
+                <StatCard icon={<Calendar size={24}/>} label="Rides Taken" value="12" color="bg-purple-100 text-purple-600" />
+            </div>
+
+            {/* Feed Header */}
+            <div className="flex justify-between items-end px-2">
+                <h3 className="text-xl font-bold text-gray-900">Active Rides</h3>
+                <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{plans.length} available</span>
+            </div>
+
+            {/* The Feed */}
             <div className="space-y-4">
-                {plans.length === 0 && !loading && (
-                    <div className="text-center py-10 opacity-50">
-                        <div className="text-4xl mb-2">🚗</div>
-                        <p className="font-bold text-gray-500">No active rides</p>
+                {plans.length === 0 ? (
+                    <div className="bg-white rounded-[2rem] border border-dashed border-gray-300 p-12 text-center">
+                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <MapPin size={32} className="text-gray-300" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">No active rides yet</h3>
+                        <p className="text-gray-500">Be the first to post a trip today!</p>
                     </div>
-                )}
+                ) : (
+                    <AnimatePresence>
+                        {plans.map((plan) => {
+                            const isMine = plan.user_email === session.user.email
+                            const dateObj = new Date(plan.travel_time)
 
-                <AnimatePresence>
-                    {plans.map((plan) => {
-                        const isFull = plan.seats_available === 0
-                        const hasJoined = plan.passengers?.includes(session.user.email)
-                        const isMyRide = plan.user_email === session.user.email
-                        const matches = findMatchingOrders(plan, orders)
+                            return (
+                            <motion.div key={plan.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="group bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-default relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-50 to-transparent rounded-bl-full -mr-4 -mt-4 transition-opacity opacity-50 group-hover:opacity-100"></div>
 
-                        // Format time safely
-                        let displayTime = plan.travel_time
-                        if (plan.travel_time.includes('T')) {
-                            displayTime = formatDisplayTime(plan.travel_time)
-                        }
-
-                        return (
-                            <motion.div key={plan.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 relative group hover:shadow-md transition-shadow">
-                                {matches.length > 0 && (
-                                    <div className="mb-4 bg-orange-50 border border-orange-100 p-3 rounded-xl flex items-center gap-3 animate-pulse">
-                                        <div className="bg-orange-100 p-2 rounded-full text-orange-600"><Flame size={18} fill="currentColor" /></div>
-                                        <p className="text-sm font-bold text-gray-800">{matches.length} people need items from here!</p>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">{getIcon(plan.mode)} {plan.mode}</div>
-                                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">{plan.origin} <ArrowRight size={14} className="text-gray-300" /> {plan.destination}</h3>
-                                        <div className="flex items-center gap-2 text-gray-500 text-sm mt-1 font-medium bg-gray-50 px-2 py-1 rounded-md inline-flex">
-                                            <Clock size={14} /> {displayTime}
+                                <div className="flex justify-between items-start mb-4 relative z-10">
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center gap-3 text-lg md:text-xl font-bold text-gray-900">
+                                            {plan.origin} <ArrowRight className="text-gray-300" size={20}/> {plan.destination}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-gray-500 font-medium mt-1 text-sm">
+                                            <Calendar size={14} className="text-blue-500"/> {dateObj.toLocaleDateString('en-US', {month:'short', day:'numeric'})}
+                                            <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                            <Clock size={14} className="text-blue-500"/> {dateObj.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end">
-                                        <div className="flex -space-x-2">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-600 shadow-sm">{plan.user_email[0].toUpperCase()}</div>
-                                            {plan.passengers?.map((p, i) => (
-                                                <div key={i} className="w-8 h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-xs font-bold text-green-600 shadow-sm">{p[0].toUpperCase()}</div>
-                                            ))}
-                                        </div>
-                                        <span className={`text-xs mt-1 font-bold ${plan.seats_available > 1 ? 'text-green-600' : 'text-orange-500'}`}>
-                      {plan.seats_available} seats left
-                    </span>
+                                    
+                                    <div className={`px-3 py-1 rounded-full text-xs font-bold border ${plan.seats_available > 0 ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                                        {plan.seats_available} seats
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t border-gray-50 flex justify-between items-center">
-                                    <span className="text-xs font-medium text-gray-400">Posted by {plan.user_email.split('@')[0]}</span>
-
-                                    {/* BUTTONS LOGIC */}
-                                    {!isMyRide && !hasJoined && !isFull && (
-                                        <button onClick={() => handleJoin(plan.id, plan.passengers || [], plan.seats_available)} className="bg-[#1a1a1a] text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-black transition-colors flex items-center gap-2 shadow-lg shadow-gray-200">
-                                            Join Ride <Users size={14} />
-                                        </button>
-                                    )}
-                                    {hasJoined && <span className="text-green-600 font-bold text-sm flex items-center gap-1 bg-green-50 px-3 py-1 rounded-full border border-green-100"><Check size={14} /> Joined</span>}
-
-                                    {/* CREATOR BUTTONS */}
-                                    {isMyRide && (
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleComplete(plan.id)}
-                                                className="bg-green-100 text-green-700 p-2 rounded-full hover:bg-green-200 transition-colors"
-                                                title="Mark as Complete"
-                                            >
-                                                <CheckCircle size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(plan.id)}
-                                                className="bg-red-50 text-red-500 p-2 rounded-full hover:bg-red-100 transition-colors"
-                                                title="Delete Trip"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                                <div className="pt-4 border-t border-gray-50 flex justify-between items-center relative z-10">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-100 to-indigo-100 flex items-center justify-center text-xs font-bold text-blue-600">
+                                            {plan.user_email[0].toUpperCase()}
                                         </div>
+                                        <span className="text-sm font-medium text-gray-500">{plan.user_email.split('@')[0]}</span>
+                                    </div>
+
+                                    {isMine ? (
+                                        <button onClick={() => handleDelete(plan.id)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"><Trash2 size={18}/></button>
+                                    ) : (
+                                        <button className="bg-black text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200">
+                                            Join Ride
+                                        </button>
                                     )}
                                 </div>
                             </motion.div>
-                        )
-                    })}
-                </AnimatePresence>
+                            )
+                        })}
+                    </AnimatePresence>
+                )}
             </div>
         </div>
-    )
+      </div>
+    </div>
+  )
 }
