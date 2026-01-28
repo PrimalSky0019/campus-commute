@@ -8,7 +8,10 @@ export default {
         extend: {
             // 1. Add your modern font
             fontFamily: {
-                sans: ['DM Sans', 'sans-serif'],
+                sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+                appleGray: '#F5F5F7',
             },
             // 2. Register the animations
             animation: {
