@@ -1,5 +1,8 @@
+import React from 'react'
 import { motion } from 'framer-motion'
 import { Car, ShoppingBag, ShieldAlert, ArrowRight, Users, Coffee, Play, Zap, Smile, Lock } from 'lucide-react'
+
+// --- Components ---
 
 const FeatureCard = ({ title, desc, icon, bg, btn, delay, isTall }) => (
     <motion.div
@@ -175,11 +178,16 @@ export default function LandingPage({ onGetStarted = () => console.log("Get Star
 
                 <motion.p
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6, duration: 0.8 }}
+                    animate={{
+                        opacity: 1,
+                        transition: { delay: 0.6, duration: 0.8 } // Entrance timing goes here
+                    }}
                     className="text-xl md:text-2xl text-gray-600 max-w-2xl font-medium mb-10 leading-relaxed cursor-default"
-                    whileHover={{ color: "#1a1a1a", letterSpacing: "0.02em" }}
-                    transition={{ duration: 0.3 }}
+                    whileHover={{
+                        color: "#1a1a1a",
+                        letterSpacing: "0.02em",
+                        transition: { duration: 0.3 } // Hover timing goes here
+                    }}
                 >
                     Travel together. Eat together. Stay safe together. <br/>
                     <span className="font-bold text-[#00C853]">The all-in-one platform for student life.</span>
@@ -410,7 +418,6 @@ export default function LandingPage({ onGetStarted = () => console.log("Get Star
                         <h3 className="text-3xl font-bold text-[#1a1a1a] mb-8">What You Can Do</h3>
                         {[
                             { icon: "🚗", title: "Share Rides", desc: "Going to the airport? Heading home? Find students going your way." },
-                            // eslint-disable-next-line
                             { icon: "🍔", title: "Pool Food Orders", desc: "Hungry? Order together from Zomato/Blinkit for faster delivery & discounts." },
                             { icon: "🚨", title: "Emergency Help", desc: "Need assistance? SOS button connects you to the safety network instantly." },
                             { icon: "👥", title: "Build Community", desc: "Meet peers, make friends, expand your campus network organically." }
@@ -444,7 +451,6 @@ export default function LandingPage({ onGetStarted = () => console.log("Get Star
                         viewport={{ once: true }}
                         transition={{ delay: 0.3 }}
                         whileHover={{ boxShadow: "0 40px 80px rgba(0, 200, 83, 0.15)" }}
-                        // Fixed: Removed 'relative' to avoid conflict with 'sticky'
                         className="bg-gradient-to-br from-green-50 to-yellow-50 rounded-3xl p-12 border border-green-100 overflow-hidden h-fit md:sticky md:top-24"
                     >
                         <motion.div
