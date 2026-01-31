@@ -6,7 +6,7 @@ A smart campus-focused platform that helps students coordinate daily travel and 
 
 ## 🔗 Live Demo
 👉 https://campus-commute.vercel.app  
-*(Replace with your actual deployed link)*
+
 
 ---
 
