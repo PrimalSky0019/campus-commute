@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
-import { motion } from 'framer-motion'
-import { Leaf, Drumstick, Plane, Train, ShoppingBag, Home, Bell, Check } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Leaf, Drumstick, Plane, Train, ShoppingBag, Home, Bell, Check, ArrowRight, Sparkles, Utensils } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function Onboarding({ session, onComplete }) {
     const [step, setStep] = useState(1)
     const [loading, setLoading] = useState(false)
+    const [direction, setDirection] = useState(1) // To control slide direction
 
     // Form Data
     const [fullName, setFullName] = useState('')
@@ -15,11 +16,16 @@ export default function Onboarding({ session, onComplete }) {
     const [notify, setNotify] = useState(true)
 
     const PRESET_ROUTES = [
-        { name: 'Airport', icon: <Plane size={18} /> },
-        { name: 'Railway Stn', icon: <Train size={18} /> },
-        { name: 'City Mall', icon: <ShoppingBag size={18} /> },
-        { name: 'Home (Weekend)', icon: <Home size={18} /> }
+        { name: 'Airport', icon: <Plane size={20} />, color: 'bg-blue-50 text-blue-600' },
+        { name: 'Railway Stn', icon: <Train size={20} />, color: 'bg-orange-50 text-orange-600' },
+        { name: 'City Mall', icon: <ShoppingBag size={20} />, color: 'bg-pink-50 text-pink-600' },
+        { name: 'Home', icon: <Home size={20} />, color: 'bg-green-50 text-green-600' }
     ]
+
+    const changeStep = (newStep) => {
+        setDirection(newStep > step ? 1 : -1)
+        setStep(newStep)
+    }
 
     const toggleRoute = (route) => {
         if (routes.includes(route)) {
@@ -40,264 +46,250 @@ export default function Onboarding({ session, onComplete }) {
         })
 
         if (error) {
-            toast.error("Error saving profile: " + error.message)
+            toast.error(error.message)
         } else {
-            toast.success("Profile saved successfully!")
-            onComplete() // Tell App.jsx we are done!
+            toast.success("Welcome to Campus Commute!")
+            onComplete()
         }
         setLoading(false)
     }
 
+    // Animation Variants
+    const slideVariants = {
+        hidden: (direction) => ({
+            x: direction > 0 ? 50 : -50,
+            opacity: 0,
+            scale: 0.95
+        }),
+        visible: {
+            x: 0,
+            opacity: 1,
+            scale: 1,
+            transition: { type: "spring", stiffness: 300, damping: 30 }
+        },
+        exit: (direction) => ({
+            x: direction > 0 ? -50 : 50,
+            opacity: 0,
+            scale: 0.95,
+            transition: { duration: 0.2 }
+        })
+    }
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#FDF8F0] via-white to-[#F5F5F5] flex items-center justify-center p-6 font-sans text-[#1a1a1a] relative overflow-hidden">
-            {/* Animated background orbs */}
-            <motion.div
-                className="fixed top-0 right-0 w-96 h-96 bg-[#00C853]/5 rounded-full blur-3xl pointer-events-none"
-                animate={{ y: [0, 50, 0], x: [0, 30, 0] }}
-                transition={{ duration: 8, repeat: Infinity }}
-            />
-            <motion.div
-                className="fixed bottom-0 left-0 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl pointer-events-none"
-                animate={{ y: [0, -50, 0], x: [0, -30, 0] }}
-                transition={{ duration: 10, repeat: Infinity }}
-            />
+        <div className="min-h-screen bg-[#F5F5F7] flex items-center justify-center p-6 font-sans relative overflow-hidden">
 
+            {/* --- 1. DYNAMIC MESH BACKGROUND --- */}
+            <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+                <motion.div
+                    animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute -top-[20%] -left-[10%] w-[800px] h-[800px] bg-blue-300/20 rounded-full blur-[100px]"
+                />
+                <motion.div
+                    animate={{ rotate: -360, scale: [1, 1.5, 1] }}
+                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                    className="absolute top-[20%] -right-[10%] w-[600px] h-[600px] bg-purple-300/20 rounded-full blur-[100px]"
+                />
+                <motion.div
+                    animate={{ y: [0, 50, 0] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute bottom-[-10%] left-[20%] w-[500px] h-[500px] bg-green-300/20 rounded-full blur-[100px]"
+                />
+            </div>
+
+            {/* --- 2. GLASS CARD --- */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="max-w-md w-full bg-white/95 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/60 relative z-10"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, type: "spring" }}
+                className="max-w-lg w-full bg-white/80 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white relative z-10"
             >
-                {/* Progress Bar with Animation */}
-                <div className="flex gap-2 mb-8">
-                    {[1, 2, 3].map(i => (
-                        <motion.div 
-                            key={i} 
-                            layoutId={`progress-${i}`}
-                            animate={{ scaleX: i <= step ? 1 : 0.6, opacity: i <= step ? 1 : 0.3 }}
-                            className="h-2 flex-1 rounded-full bg-[#00C853] origin-left transition-all"
-                        />
-                    ))}
+                {/* Progress Bar */}
+                <div className="flex justify-between items-center mb-10">
+                    <div className="flex gap-2">
+                        {[1, 2, 3].map(i => (
+                            <motion.div
+                                key={i}
+                                animate={{
+                                    width: i === step ? 30 : 10,
+                                    backgroundColor: i <= step ? '#000' : '#E5E7EB'
+                                }}
+                                className="h-2 rounded-full transition-all duration-300"
+                            />
+                        ))}
+                    </div>
+                    <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">Step {step}/3</span>
                 </div>
 
-                {/* Step Counter */}
-                <div className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider">
-                    Step {step} of 3
-                </div>
+                <AnimatePresence mode="wait" custom={direction}>
 
-                {/* --- STEP 1: BASICS --- */}
-                {step === 1 && (
-                    <motion.div 
-                        initial={{ x: 20, opacity: 0 }} 
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: -20, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <motion.h2 
-                            className="text-3xl font-black mb-2"
-                            animate={{ opacity: [0.7, 1] }}
-                            transition={{ duration: 0.5 }}
+                    {/* --- STEP 1: IDENTITY --- */}
+                    {step === 1 && (
+                        <motion.div
+                            key="step1"
+                            custom={direction}
+                            variants={slideVariants}
+                            initial="hidden" animate="visible" exit="exit"
                         >
-                            Welcome! 👋
-                        </motion.h2>
-                        <p className="text-gray-500 mb-8 font-medium">Let's set up your campus identity.</p>
-
-                        <label className="block text-sm font-bold mb-3 ml-1 text-gray-700">What's your name?</label>
-                        <motion.input 
-                            value={fullName}
-                            onChange={e => setFullName(e.target.value)}
-                            className="w-full bg-gray-50/80 text-black p-4 rounded-xl font-bold outline-none focus:ring-2 ring-[#00C853] focus:bg-white mb-6 border border-gray-100 transition-all placeholder:text-gray-400"
-                            placeholder="e.g. Rahul Sharma"
-                            autoFocus
-                            whileFocus={{ scale: 1.02 }}
-                        />
-
-                        <motion.div 
-                            className="flex items-center gap-3 p-4 bg-gray-50/80 rounded-xl mb-8 cursor-pointer border border-gray-100 hover:border-gray-200 transition-all"
-                            onClick={() => setNotify(!notify)}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            <motion.div 
-                                className={`w-6 h-6 rounded border flex items-center justify-center transition-all ${notify ? 'bg-[#00C853] border-[#00C853] text-white shadow-lg shadow-green-200' : 'border-gray-300 bg-white'}`}
-                                animate={{ scale: notify ? 1.1 : 1 }}
-                            >
-                                {notify && <Check size={14} strokeWidth={4} />}
-                            </motion.div>
-                            <div>
-                                <p className="font-bold text-sm text-gray-900">Enable Notifications</p>
-                                <p className="text-xs text-gray-500">Get alerts for rides & orders</p>
+                            <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-black/20">
+                                <Sparkles size={32} />
                             </div>
-                            <motion.div 
-                                className="ml-auto text-gray-400"
-                                animate={{ y: notify ? -2 : 0 }}
-                            >
-                                <Bell size={18} />
-                            </motion.div>
-                        </motion.div>
+                            <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Let's start.</h2>
+                            <p className="text-gray-500 text-lg mb-8">What should we call you on campus?</p>
 
-                        <motion.button
-                            disabled={!fullName}
-                            onClick={() => setStep(2)}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="w-full bg-[#1a1a1a] text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Continue →
-                        </motion.button>
-                    </motion.div>
-                )}
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Full Name</label>
+                                    <input
+                                        value={fullName}
+                                        onChange={e => setFullName(e.target.value)}
+                                        className="w-full bg-gray-100 text-gray-900 text-xl p-5 rounded-2xl font-bold outline-none focus:bg-white focus:ring-2 focus:ring-black/10 transition-all placeholder:text-gray-400"
+                                        placeholder="Type your name..."
+                                        autoFocus
+                                    />
+                                </div>
 
-                {/* --- STEP 2: DIET --- */}
-                {step === 2 && (
-                    <motion.div 
-                        initial={{ x: 20, opacity: 0 }} 
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: -20, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <motion.h2 
-                            className="text-3xl font-black mb-2"
-                            animate={{ opacity: [0.7, 1] }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            Food Preferences 🍔
-                        </motion.h2>
-                        <p className="text-gray-500 mb-8 font-medium">This helps us filter delivery requests for you.</p>
-
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            {[
-                                { val: 'Veg', label: 'Pure Veg', icon: <Leaf size={32} />, color: 'green' },
-                                { val: 'Non-Veg', label: 'Non-Veg', icon: <Drumstick size={32} />, color: 'red' }
-                            ].map(option => (
-                                <motion.button
-                                    key={option.val}
-                                    onClick={() => setDiet(option.val)}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${
-                                        diet === option.val 
-                                            ? option.color === 'green' 
-                                                ? 'border-[#00C853] bg-green-50 text-[#00C853] shadow-lg shadow-green-200' 
-                                                : 'border-red-500 bg-red-50 text-red-600 shadow-lg shadow-red-200'
-                                            : 'border-gray-100 bg-gray-50/80 text-gray-400 hover:border-gray-200'
-                                    }`}
+                                <motion.div
+                                    className="p-5 rounded-2xl border-2 border-transparent bg-gray-50 hover:bg-white hover:border-gray-200 cursor-pointer transition-all flex items-center justify-between group"
+                                    onClick={() => setNotify(!notify)}
+                                    whileTap={{ scale: 0.98 }}
                                 >
-                                    <motion.div
-                                        animate={{ scale: diet === option.val ? 1.2 : 1 }}
-                                        transition={{ type: "spring", stiffness: 200 }}
-                                    >
-                                        {option.icon}
-                                    </motion.div>
-                                    <span className="font-bold text-sm">{option.label}</span>
-                                </motion.button>
-                            ))}
-                        </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${notify ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}>
+                                            <Bell size={24} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900">Notifications</h4>
+                                            <p className="text-sm text-gray-500">Alerts for rides & orders</p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${notify ? 'bg-black border-black' : 'border-gray-300'}`}>
+                                        {notify && <Check size={14} className="text-white" />}
+                                    </div>
+                                </motion.div>
+                            </div>
 
-                        <motion.button 
-                            onClick={() => setDiet('Both')} 
-                            whileHover={{ scale: 1.02 }}
-                            className={`w-full p-3 rounded-xl mb-8 font-bold text-sm border transition-all ${diet === 'Both' ? 'bg-gray-800 text-white border-gray-800 shadow-lg' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}
-                        >
-                            I eat everything (Both)
-                        </motion.button>
-
-                        <div className="flex gap-3">
-                            <motion.button 
-                                onClick={() => setStep(1)}
-                                whileHover={{ scale: 1.05 }}
-                                className="flex-1 border-2 border-gray-200 text-gray-600 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                            <button
+                                disabled={!fullName}
+                                onClick={() => changeStep(2)}
+                                className="w-full bg-black text-white py-5 rounded-2xl font-bold text-lg hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-black/10 mt-10 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Back
-                            </motion.button>
-                            <motion.button 
-                                onClick={() => setStep(3)}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="flex-1 bg-[#1a1a1a] text-white py-4 rounded-xl font-bold hover:shadow-lg transition-all"
-                            >
-                                Continue →
-                            </motion.button>
-                        </div>
-                    </motion.div>
-                )}
+                                Continue <ArrowRight size={20} />
+                            </button>
+                        </motion.div>
+                    )}
 
-                {/* --- STEP 3: ROUTES --- */}
-                {step === 3 && (
-                    <motion.div 
-                        initial={{ x: 20, opacity: 0 }} 
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: -20, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <motion.h2 
-                            className="text-3xl font-black mb-2"
-                            animate={{ opacity: [0.7, 1] }}
-                            transition={{ duration: 0.5 }}
+                    {/* --- STEP 2: DIET --- */}
+                    {step === 2 && (
+                        <motion.div
+                            key="step2"
+                            custom={direction}
+                            variants={slideVariants}
+                            initial="hidden" animate="visible" exit="exit"
                         >
-                            Route Alerts 🔔
-                        </motion.h2>
-                        <p className="text-gray-500 mb-8 font-medium">We'll notify you for rides to these places.</p>
+                            <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
+                                <Utensils size={32} />
+                            </div>
+                            <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Food vibes?</h2>
+                            <p className="text-gray-500 text-lg mb-8">This filters the delivery requests you see.</p>
 
-                        <div className="flex flex-wrap gap-3 mb-10">
-                            {PRESET_ROUTES.map((route, idx) => {
-                                const isActive = routes.includes(route.name)
-                                return (
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                {[
+                                    { val: 'Veg', label: 'Vegetarian', icon: <Leaf size={28} />, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-500' },
+                                    { val: 'Non-Veg', label: 'Non-Veg', icon: <Drumstick size={28} />, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-500' }
+                                ].map(option => (
                                     <motion.button
-                                        key={route.name}
-                                        onClick={() => toggleRoute(route.name)}
-                                        whileHover={{ scale: 1.08 }}
+                                        key={option.val}
+                                        onClick={() => setDiet(option.val)}
+                                        whileHover={{ y: -4 }}
                                         whileTap={{ scale: 0.95 }}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
-                                        className={`px-4 py-3 rounded-full font-bold text-sm flex items-center gap-2 transition-all border-2 ${
-                                            isActive 
-                                                ? 'bg-[#1a1a1a] text-white border-[#1a1a1a] shadow-lg' 
-                                                : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
+                                        className={`p-6 rounded-3xl border-2 flex flex-col items-center gap-4 transition-all relative overflow-hidden ${
+                                            diet === option.val
+                                                ? `${option.bg} ${option.border} shadow-lg`
+                                                : 'bg-white border-gray-100 hover:border-gray-300'
                                         }`}
                                     >
-                                        <motion.div
-                                            animate={{ rotate: isActive ? 360 : 0 }}
-                                            transition={{ duration: 0.5 }}
-                                        >
-                                            {route.icon}
-                                        </motion.div>
-                                        {route.name}
-                                    </motion.button>
-                                )
-                            })}
-                        </div>
+                                        <div className={`w-14 h-14 rounded-full bg-white flex items-center justify-center ${option.color} shadow-sm`}>
+                                            {option.icon}
+                                        </div>
+                                        <span className={`font-bold text-lg ${diet === option.val ? 'text-black' : 'text-gray-500'}`}>{option.label}</span>
 
-                        <div className="flex gap-3">
-                            <motion.button 
-                                onClick={() => setStep(2)}
-                                whileHover={{ scale: 1.05 }}
-                                className="flex-1 border-2 border-gray-200 text-gray-600 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all"
-                            >
-                                Back
-                            </motion.button>
+                                        {diet === option.val && (
+                                            <div className="absolute top-3 right-3 w-6 h-6 bg-black rounded-full flex items-center justify-center">
+                                                <Check size={14} className="text-white"/>
+                                            </div>
+                                        )}
+                                    </motion.button>
+                                ))}
+                            </div>
+
                             <motion.button
-                                onClick={handleSubmit}
-                                disabled={loading}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="flex-1 bg-[#00C853] text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-200/30 "
+                                onClick={() => setDiet('Both')}
+                                whileTap={{ scale: 0.98 }}
+                                className={`w-full p-4 rounded-2xl font-bold text-sm border-2 transition-all ${diet === 'Both' ? 'bg-gray-900 text-white border-gray-900' : 'bg-transparent border-gray-200 text-gray-500 hover:border-gray-400'}`}
                             >
-                                {loading ? (
-                                    <motion.span 
-                                        animate={{ opacity: [0.6, 1, 0.6] }}
-                                        transition={{ duration: 1, repeat: Infinity }}
-                                    >
-                                        Setting up...
-                                    </motion.span>
-                                ) : (
-                                    'Finish Setup 🎉'
-                                )}
+                                I eat everything (Both)
                             </motion.button>
-                        </div>
-                    </motion.div>
-                )}
+
+                            <div className="flex gap-4 mt-10">
+                                <button onClick={() => changeStep(1)} className="px-6 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Back</button>
+                                <button onClick={() => changeStep(3)} className="flex-1 bg-black text-white py-4 rounded-2xl font-bold text-lg hover:shadow-lg transition-all">Next Step</button>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* --- STEP 3: ROUTES --- */}
+                    {step === 3 && (
+                        <motion.div
+                            key="step3"
+                            custom={direction}
+                            variants={slideVariants}
+                            initial="hidden" animate="visible" exit="exit"
+                        >
+                            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                                <Plane size={32} />
+                            </div>
+                            <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Frequent spots?</h2>
+                            <p className="text-gray-500 text-lg mb-8">Tap the places you visit often.</p>
+
+                            <div className="grid grid-cols-2 gap-3 mb-10">
+                                {PRESET_ROUTES.map((route, idx) => {
+                                    const isActive = routes.includes(route.name)
+                                    return (
+                                        <motion.button
+                                            key={route.name}
+                                            onClick={() => toggleRoute(route.name)}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className={`p-4 rounded-2xl font-bold text-sm flex flex-col items-center justify-center gap-3 transition-all border-2 h-32 ${
+                                                isActive
+                                                    ? 'bg-black text-white border-black shadow-lg'
+                                                    : 'bg-white border-gray-100 text-gray-500 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <div className={`p-2 rounded-full ${isActive ? 'bg-white/20' : route.color}`}>
+                                                {route.icon}
+                                            </div>
+                                            {route.name}
+                                        </motion.button>
+                                    )
+                                })}
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button onClick={() => changeStep(2)} className="px-6 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Back</button>
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={loading}
+                                    className="flex-1 bg-[#007AFF] text-white py-4 rounded-2xl font-bold text-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all disabled:opacity-50"
+                                >
+                                    {loading ? 'Setting up...' : 'Finish Setup 🎉'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+
+                </AnimatePresence>
             </motion.div>
         </div>
     )
