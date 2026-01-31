@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Clock, Calendar, MapPin, ArrowRight, Trash2, TrendingUp, Zap, Map as MapIcon, List } from 'lucide-react'
 import { toast } from 'sonner'
 
-// --- 1. MOCK DATA ---
+// --- 1. MOCK DATA FOR "ALIVE" FEEL ---
 const TRENDING_LOCATIONS = [
     { name: 'Airport Terminal 2', count: 12, top: '30%', left: '60%' },
     { name: 'City Center Mall', count: 8, top: '50%', left: '45%' },
@@ -13,18 +13,22 @@ const TRENDING_LOCATIONS = [
 
 // --- 2. COMPONENTS ---
 
-// New: Live Map Visualization
+// New: Live Map Visualization (Pure CSS/React - No API Key needed)
 function LiveMap({ activeRides }) {
     return (
         <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden relative h-[600px] w-full group">
-            {/* Map Background */}
+            {/* Map Background Image */}
             <div
-                className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:scale-105 transition-transform duration-[2s]"
-                style={{ backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')`, backgroundSize: 'cover', filter: 'grayscale(100%) opacity(0.3)' }}
+                className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:scale-105 transition-transform duration-[3s]"
+                style={{
+                    backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')`,
+                    backgroundSize: 'cover',
+                    filter: 'grayscale(100%) opacity(0.3)'
+                }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
 
-            {/* Floating Header */}
+            {/* Floating Status Header */}
             <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-10">
                 <div className="bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
@@ -38,7 +42,7 @@ function LiveMap({ activeRides }) {
                 </div>
             </div>
 
-            {/* Pulsing Markers */}
+            {/* Pulsing "Live User" Markers */}
             {TRENDING_LOCATIONS.map((loc, i) => (
                 <motion.div
                     key={i}
@@ -54,6 +58,7 @@ function LiveMap({ activeRides }) {
                         <div className="absolute top-0 left-0 w-4 h-4 bg-blue-500 rounded-full animate-ping opacity-20" />
                     </div>
 
+                    {/* Hover Tooltip */}
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-black text-white px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover/marker:opacity-100 transition-opacity pointer-events-none transform translate-y-2 group-hover/marker:translate-y-0">
                         {loc.name}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black" />
@@ -103,11 +108,11 @@ function LocationInput({ label, value, onChange }) {
     )
 }
 
-// --- 3. MAIN PAGE ---
+// --- 3. MAIN PAGE LAYOUT ---
 export default function TravelFeed({ session }) {
     const [plans, setPlans] = useState([])
     const [loading, setLoading] = useState(false)
-    const [viewMode, setViewMode] = useState('list')
+    const [viewMode, setViewMode] = useState('map') // Default to 'map' so it looks populated immediately
     const [form, setForm] = useState({ origin: '', dest: '', date: '', time: '', mode: 'Cab' })
 
     const fetchData = async () => {
@@ -143,7 +148,7 @@ export default function TravelFeed({ session }) {
     return (
         <div className="max-w-7xl mx-auto pb-24">
 
-            {/* --- WELCOME BANNER --- */}
+            {/* --- 1. WELCOME BANNER (Fills the "Lonely" Top Space) --- */}
             <motion.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 className="bg-gradient-to-r from-[#111] to-[#222] rounded-[2rem] p-8 md:p-10 mb-10 text-white shadow-xl relative overflow-hidden"
@@ -154,6 +159,7 @@ export default function TravelFeed({ session }) {
                         <p className="text-gray-400 text-lg font-medium">Find your travel buddy for today.</p>
                     </div>
 
+                    {/* Gamification Stats */}
                     <div className="flex gap-4">
                         <div className="text-center px-6 py-2 bg-white/10 rounded-2xl backdrop-blur-md border border-white/5">
                             <div className="text-2xl font-black">₹1.2k</div>
@@ -166,13 +172,14 @@ export default function TravelFeed({ session }) {
                     </div>
                 </div>
 
+                {/* Abstract Art Background */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600 opacity-20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </motion.div>
 
-            {/* --- MAIN GRID --- */}
+            {/* --- 2. SMART GRID LAYOUT --- */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-                {/* LEFT COLUMN: FORM & TRENDING (Fixed Sticky) */}
+                {/* LEFT COLUMN: Fixed Sticky Wrapper (Fixes the Overlap Bug) */}
                 <div className="lg:col-span-5 relative">
                     <div className="sticky top-24 space-y-6">
 
@@ -200,7 +207,7 @@ export default function TravelFeed({ session }) {
                             </form>
                         </motion.div>
 
-                        {/* Trending Section */}
+                        {/* Trending Section (Now correctly contained so it won't overlap) */}
                         <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hidden lg:block">
                             <div className="flex items-center gap-2 mb-4 text-gray-900 font-bold px-2">
                                 <TrendingUp size={20} className="text-blue-600"/> Trending Now
@@ -221,9 +228,10 @@ export default function TravelFeed({ session }) {
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN: FEED & MAP */}
+                {/* RIGHT COLUMN: FEED or MAP */}
                 <div className="lg:col-span-7 space-y-6">
 
+                    {/* Toggle Header */}
                     <div className="flex justify-between items-center px-2">
                         <div>
                             <h3 className="text-2xl font-black text-gray-900">Active Rides</h3>
@@ -240,6 +248,7 @@ export default function TravelFeed({ session }) {
                         </div>
                     </div>
 
+                    {/* --- 3. DYNAMIC CONTENT AREA --- */}
                     {viewMode === 'map' ? (
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                             <LiveMap activeRides={plans.length} />
